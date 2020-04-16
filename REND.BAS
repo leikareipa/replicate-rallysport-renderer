@@ -83,14 +83,9 @@ END SUB
 
 SUB Transform (numVertices%, vertices() AS vertex, transformedVertices() AS vertex, cameraPos AS vertex)
     FOR v = 0 TO (numVertices% - 1)
-        CALL TransformVector(vertices(v), transformedVertices(v), cameraPos)
+        ' Perspective division to a vanishing point at the top center of the screen
+        ' (at x=160, y=0 in VGA mode 13h).
+        transformedVertices(v).x = (screenWidthHalf + ((cameraPos.x + vertices(v).x - screenWidthHalf) / (cameraPos.z + vertices(v).z)))
+        transformedVertices(v).y = ((cameraPos.y + vertices(v).y) / (cameraPos.z + vertices(v).z))
     NEXT v
 END SUB
-
-SUB TransformVector (src AS vertex, dst AS vertex, cameraPos AS vertex)
-    ' Perspective division to a vanishing point at the top center of the screen
-    ' (at x=160, y=0 in VGA mode 13h).
-    dst.x = (screenWidthHalf + ((cameraPos.x + src.x - screenWidthHalf) / (cameraPos.z + src.z)))
-    dst.y = ((cameraPos.y + src.y) / (cameraPos.z + src.z))
-END SUB
-
