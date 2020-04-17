@@ -6,8 +6,11 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "renderer.h"
+#include "polygon.h"
 
 #if __DMC__
     /* Digital Mars C/C++.*/
@@ -25,13 +28,17 @@
 /* Pointer to the beginning of video memory in VGA mode 13h.*/
 static uint8_t *const VRAM = (uint8_t*)0xA0000000L;
 
+#define LERP(a, b, weight) ((a) + ((weight) * ((b) - (a))))
+
 /* Indexes into the X,Y element in video memory in VGA mode 13h.*/
-#define VRAM_XY(x, y) VRAM[((unsigned)(x)) + (((unsigned)(y)) << 6) + (((unsigned)(y)) << 8)]
+#define VRAM_XY(x, y) VRAM[(unsigned)(x) + (unsigned)(y) * 320]
 
 static unsigned CURRENT_VIDEO_MODE = VIDEO_MODE_TEXT;
 
-static const GRAPHICS_MODE_WIDTH = 320;
-static const GRAPHICS_MODE_HEIGHT = 200;
+static const unsigned GRAPHICS_MODE_WIDTH = 320;
+static const unsigned GRAPHICS_MODE_HEIGHT = 200;
+
+#include "polyfill.c"
 
 static int current_video_mode(void)
 {
@@ -48,22 +55,34 @@ void krender_clear_screen(void)
 {
     switch (CURRENT_VIDEO_MODE)
     {
-        case VIDEO_MODE_GRAPHICS: memset(VRAM, 0, (GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT)); break;
-        case VIDEO_MODE_TEXT: break; /* TODO.*/
+        case VIDEO_MODE_GRAPHICS:
+        {
+            memset(VRAM, 0, (GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT));
+            break;
+        }
+        case VIDEO_MODE_TEXT:
+        {
+            /* TODO.*/
+            break;
+        }
         default: assert(0 && "Unknown video mode.");
     }
 
     return;
 }
 
-void krender_draw_test_pattern(void)
+void krender_draw_test_pattern(struct polygon_s *const poly)
 {
     switch (CURRENT_VIDEO_MODE)
     {
-        case VIDEO_MODE_TEXT: printf("TEST PATTERN.\n"); break;
+        case VIDEO_MODE_TEXT:
+        {
+            printf("TEST PATTERN.\n");
+            break;
+        }
         case VIDEO_MODE_GRAPHICS:
         {
-            VRAM_XY((GRAPHICS_MODE_WIDTH/2), (GRAPHICS_MODE_HEIGHT/2)) = 5;
+            fill_poly(poly);
             break;
         }
     }

@@ -8,6 +8,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+struct polygon_s;
+
 enum
 {
     VIDEO_MODE_GRAPHICS = 0x13,
@@ -27,7 +29,7 @@ void krender_clear_screen(void);
 
 /* Temporary function. Renders something to the screen to allow the user to
  * verify that the renderer is working.*/
-void krender_draw_test_pattern(void);
+void krender_draw_test_pattern(struct polygon_s *const poly);
 
 unsigned krender_current_video_mode(void);
 
