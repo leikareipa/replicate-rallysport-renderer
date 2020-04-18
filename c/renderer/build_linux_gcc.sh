@@ -4,4 +4,4 @@ src/main.c
 src/polygon.c
 "
 
-gcc -ansi -pedantic -Wall $SOURCE_FILES -o bin/renderer
+gcc -std=c99 -pedantic -Wall $SOURCE_FILES -o bin/renderer -lm

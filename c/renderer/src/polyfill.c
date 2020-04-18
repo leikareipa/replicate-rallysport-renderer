@@ -5,11 +5,12 @@
  * 
  * Handles filling (rasterizing) polygons into the current rendere buffer.
  * 
- * NOTE: This file expects to be #include'd in renderer.c.
+ * NOTE: This file expects to be #included in renderer.c.
  * 
  */
 
 #include <stdlib.h>
+#include <math.h>
 
 /* The maximum number of vertices per polygon we support.*/
 #define MAX_VERTEX_COUNT 16
@@ -68,7 +69,7 @@ int compareY(const void *a, const void *b)
 
 /* Sorts the polygon's vertices in counter-clockwise order, starting from the
  * top (lowest Y) and winding around the polygon back to the top.*/
-static void sort_vertices_ccw(struct polygon_s *poly)
+static unsigned sort_vertices_ccw(struct polygon_s *poly)
 {
     unsigned i;
     unsigned numLeftVerts = 0;
@@ -90,6 +91,8 @@ static void sort_vertices_ccw(struct polygon_s *poly)
     qsort(poly->verts, poly->numVerts, sizeof(poly->verts[0]), compareY);
     topVert = &poly->verts[0];
     bottomVert = &poly->verts[poly->numVerts - 1];
+
+    const unsigned polyHeight = (bottomVert->y - topVert->y);
 
     leftVerts[numLeftVerts++] = *topVert;
 
@@ -121,7 +124,7 @@ static void sort_vertices_ccw(struct polygon_s *poly)
         poly->verts[i + numLeftVerts] = rightVerts[numRightVerts - i - 1];
     }
 
-    return;
+    return polyHeight;
 }
 
 void fill_poly(struct polygon_s *const poly)
@@ -131,7 +134,7 @@ void fill_poly(struct polygon_s *const poly)
         return;
     }
 
-    sort_vertices_ccw(poly);
+    const unsigned polyHeight = sort_vertices_ccw(poly);
 
     /* Complete the vertex loop by connecting an extra vertex at the end to
      * the beginning. This simplifies rendering.*/
@@ -178,13 +181,14 @@ void fill_poly(struct polygon_s *const poly)
         }
 
         /* When we reach the bottom of the polygon, we're done.*/
-        if (leftVertIdx == rightVertIdx)
+        if (y >= (polyHeight + poly->verts[0].y))
         {
             break;
         }
 
         /* Fill the current raster line.*/
-        if ((endX - startX) > 0)
+        if ((y >= 0) &&
+            (endX - startX) > 0)
         {
             unsigned x;
 
@@ -194,7 +198,7 @@ void fill_poly(struct polygon_s *const poly)
 
             for (x = startX; x < endX; x++)
             {
-                VRAM_XY(x, y) = currentColor;
+                VRAM_XY(x, y) = round(currentColor);
 
                 /* Increment horizontal deltas.*/
                 currentColor = (currentColor + deltaCurrentColor);

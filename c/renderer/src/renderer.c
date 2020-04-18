@@ -35,9 +35,12 @@ static uint8_t *const VRAM = (uint8_t*)0xA0000000L;
 
 static unsigned CURRENT_VIDEO_MODE = VIDEO_MODE_TEXT;
 
+static struct vertex_s CAMERA_POS = {160, 100, 0};
+
 static const unsigned GRAPHICS_MODE_WIDTH = 320;
 static const unsigned GRAPHICS_MODE_HEIGHT = 200;
 
+#include "polytrnf.c"
 #include "polyfill.c"
 
 static int current_video_mode(void)
@@ -82,6 +85,7 @@ void krender_draw_test_pattern(struct polygon_s *const poly)
         }
         case VIDEO_MODE_GRAPHICS:
         {
+            transform_poly(poly);
             fill_poly(poly);
             break;
         }

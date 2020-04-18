@@ -13,18 +13,22 @@ int main(void)
 {
     struct polygon_s poly = kpolygon_create_polygon(4);
 
-    poly.verts[0].x = 150;
-    poly.verts[0].y = 70;
-    poly.verts[0].color = 22;
-    poly.verts[1].x = 100;
-    poly.verts[1].y = 50;
-    poly.verts[1].color = 22;
-    poly.verts[2].x = 170;
-    poly.verts[2].y = 150;
-    poly.verts[2].color = 29;
-    poly.verts[3].x = 70;
-    poly.verts[3].y = 120;
-    poly.verts[3].color = 29;
+    poly.verts[0].x = -50;
+    poly.verts[0].y = 0;
+    poly.verts[0].z = 2;
+    poly.verts[0].color = 0x0a;
+    poly.verts[1].x = 50;
+    poly.verts[1].y = 0;
+    poly.verts[1].z = 2;
+    poly.verts[1].color = 0x0a;
+    poly.verts[2].x = 50;
+    poly.verts[2].y = 0;
+    poly.verts[2].z = 1;
+    poly.verts[2].color = 0x0d;
+    poly.verts[3].x = -50;
+    poly.verts[3].y = 0;
+    poly.verts[3].z = 1;
+    poly.verts[3].color = 0x0d;
 
     krender_enter_grapics_mode();
     krender_clear_screen();
