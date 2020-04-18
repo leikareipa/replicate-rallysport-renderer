@@ -35,7 +35,7 @@ static uint8_t *const VRAM = (uint8_t*)0xA0000000L;
 
 static unsigned CURRENT_VIDEO_MODE = VIDEO_MODE_TEXT;
 
-static struct vertex_s CAMERA_POS = {160, 100, 0};
+static struct vertex_s CAMERA_POS = {300, -900, -5};
 
 static const unsigned GRAPHICS_MODE_WIDTH = 320;
 static const unsigned GRAPHICS_MODE_HEIGHT = 200;

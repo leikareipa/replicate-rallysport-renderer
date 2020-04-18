@@ -76,22 +76,20 @@ static unsigned sort_vertices_ccw(struct polygon_s *poly)
     unsigned numRightVerts = 0;
     static struct vertex_s leftVerts[MAX_VERTEX_COUNT];
     static struct vertex_s rightVerts[MAX_VERTEX_COUNT];
-    struct vertex_s *topVert = NULL;
-    struct vertex_s *bottomVert = NULL;
 
     assert((poly->numVerts < MAX_VERTEX_COUNT) && "Too many vertices.");
 
     if (!poly->numVerts)
     {
-        return;
+        return 0;
     }
 
     /* Sort verts by Y coordinate from lowest to highest (top to bottom on the
      * screen).*/
     qsort(poly->verts, poly->numVerts, sizeof(poly->verts[0]), compareY);
-    topVert = &poly->verts[0];
-    bottomVert = &poly->verts[poly->numVerts - 1];
-
+    
+    struct vertex_s *const topVert = &poly->verts[0];
+    struct vertex_s *const bottomVert = &poly->verts[poly->numVerts - 1];
     const unsigned polyHeight = (bottomVert->y - topVert->y);
 
     leftVerts[numLeftVerts++] = *topVert;
@@ -187,7 +185,7 @@ void fill_poly(struct polygon_s *const poly)
         }
 
         /* Fill the current raster line.*/
-        if ((y >= 0) &&
+        if (y >= 0 &&
             (endX - startX) > 0)
         {
             unsigned x;
@@ -216,10 +214,10 @@ void fill_poly(struct polygon_s *const poly)
 
     /* Visually indicate the locations of the poly's vertices. For debugging
      * reasons.*/
-    for (y = 0; y < poly->numVerts; y++)
+   /* for (y = 0; y < poly->numVerts; y++)
     {
-        VRAM_XY(poly->verts[y].x, poly->verts[y].y) = (y + 10);
-    }
+        VRAM_XY(poly->verts[y].x, poly->verts[y].y) = y%10+10;
+    }*/
 
     return;
 }

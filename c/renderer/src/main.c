@@ -5,36 +5,30 @@
  * 
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include "renderer.h"
 #include "polygon.h"
 
+#include "../bin/gate.c"
+
 int main(void)
 {
-    struct polygon_s poly = kpolygon_create_polygon(4);
-
-    poly.verts[0].x = -50;
-    poly.verts[0].y = 0;
-    poly.verts[0].z = 2;
-    poly.verts[0].color = 0x0a;
-    poly.verts[1].x = 50;
-    poly.verts[1].y = 0;
-    poly.verts[1].z = 2;
-    poly.verts[1].color = 0x0a;
-    poly.verts[2].x = 50;
-    poly.verts[2].y = 0;
-    poly.verts[2].z = 1;
-    poly.verts[2].color = 0x0d;
-    poly.verts[3].x = -50;
-    poly.verts[3].y = 0;
-    poly.verts[3].z = 1;
-    poly.verts[3].color = 0x0d;
-
     krender_enter_grapics_mode();
     krender_clear_screen();
-    krender_draw_test_pattern(&poly);
 
-    kpolygon_release_polygon(&poly);
+    /* Render a test model.*/
+    {
+        struct polygon_s *model = gate_model();
+
+        for (int i = gateModelPolyCount-1; i >= 0; i--)
+        {
+            krender_draw_test_pattern(&model[i]);
+            kpolygon_release_polygon(&model[i]);
+        }
+
+        free(model);
+    }
     
     return 0;
 }
