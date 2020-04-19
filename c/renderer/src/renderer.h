@@ -20,6 +20,10 @@ enum
 // otherwise.
 int krender_enter_grapics_mode(void);
 
+// Copies the current contents of the render buffer onto the display (e.g.
+// into video memory in DOS).
+void krender_flip_surface(void);
+
 // Apply the given Rally-Sport palette.
 void krender_use_palette(const unsigned paletteIdx);
 
@@ -33,6 +37,14 @@ void krender_clear_screen(void);
 // Temporary function. Renders something to the screen to allow the user to
 // verify that the renderer is working.
 void krender_draw_test_pattern(struct polygon_s *const poly);
+
+// Prepare the render surface for drawing. In DOS, this means entering VGA mode
+// 13h.
+void krender_initialize(void);
+
+// Release the render surface. In DOS, this means leaving the graphics video
+// mode and entering text mode.
+void krender_release(void);
 
 unsigned krender_current_video_mode(void);
 

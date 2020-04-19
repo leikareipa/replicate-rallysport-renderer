@@ -6,4 +6,4 @@ src/file.c
 src/texture.c
 "
 
-gcc -std=c99 -pedantic -Wall $SOURCE_FILES -o bin/renderer -lm
+gcc -std=c99 -pedantic -Wall $SOURCE_FILES -o bin/renderer -lm -lSDL2

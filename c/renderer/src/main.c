@@ -14,9 +14,8 @@
 
 int main(void)
 {
-    krender_enter_grapics_mode();
+    krender_initialize();
     krender_use_palette(0);
-    krender_clear_screen();
 
     /* Render a test model.*/
     {
@@ -30,6 +29,11 @@ int main(void)
 
         free(model);
     }
+    
+    krender_flip_surface();
+    getchar();
+
+    krender_release();
     
     return 0;
 }
