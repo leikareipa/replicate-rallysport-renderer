@@ -6,6 +6,8 @@ SOURCE_FILES="
 src/renderer.c
 src/main.c
 src/polygon.c
+src/file.c
+src/texture.c
 "
 
 wine "$DMC_PATH/bin/dmc.exe" $SOURCE_FILES $BUILD_OPTIONS -I$DMC_PATH\\include

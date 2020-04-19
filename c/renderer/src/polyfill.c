@@ -11,13 +11,13 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include "texture.h"
 
 /* The maximum number of vertices per polygon we support.*/
 #define MAX_VERTEX_COUNT 16
 
 /* Initialize increments for vertical interpolation.*/
 static void init_lerp_deltas(float *const deltaX,
-                             float *const deltaColor,
                              const int dir,
                              const unsigned vertexIdx,
                              const struct vertex_s *const verts)
@@ -26,14 +26,12 @@ static void init_lerp_deltas(float *const deltaX,
     if (verts[vertexIdx].y == verts[vertexIdx + dir].y)
     {
         *deltaX = 0;
-        *deltaColor = 0;
     }
     else
     {
         const float height = (verts[vertexIdx + dir].y - verts[vertexIdx].y);
 
         *deltaX = ((verts[vertexIdx + dir].x - verts[vertexIdx].x) / height);
-        *deltaColor = ((verts[vertexIdx + dir].color - verts[vertexIdx].color) / height);
     }
 
     return;
@@ -41,12 +39,10 @@ static void init_lerp_deltas(float *const deltaX,
 
 /* Initialize values to be interpolated vertically.*/
 static void init_lerp_values(float *const x,
-                             float *const color,
                              const unsigned vertexIdx,
                              const struct vertex_s *const verts)
 {
     *x = verts[vertexIdx].x;
-    *color = verts[vertexIdx].color;
 
     return;
 }
@@ -127,6 +123,9 @@ static unsigned sort_vertices_ccw(struct polygon_s *poly)
 
 void fill_poly(struct polygon_s *const poly)
 {
+    /// Texture created for temporary testing.
+    const struct texture_s texture = ktexture_load_texture(16, TEXTURE_SOURCE_TEXT_1);
+
     if (!poly->numVerts)
     {
         return;
@@ -142,19 +141,19 @@ void fill_poly(struct polygon_s *const poly)
     unsigned leftVertIdx = 0;
     unsigned rightVertIdx = poly->numVerts;
 
-    /* Interpolation deltas.*/
-    float deltaStartX, deltaLeftColor;
-    float deltaEndX, deltaRightColor;
+    /* Vertical interpolation deltas.*/
+    float deltaStartX, deltaEndX;
+    float textureVDelta = (texture.height / (float)polyHeight);
 
-    /* Interpolated values.*/
-    float startX, leftColor;
-    float endX, rightColor;
+    /* Vertical interpolated values.*/
+    float startX, endX;
+    float textureV = 0;
 
-    init_lerp_deltas(&deltaStartX, &deltaLeftColor, 1, leftVertIdx, poly->verts);
-    init_lerp_deltas(&deltaEndX, &deltaRightColor, -1, rightVertIdx, poly->verts);
+    init_lerp_deltas(&deltaStartX, 1, leftVertIdx, poly->verts);
+    init_lerp_deltas(&deltaEndX, -1, rightVertIdx, poly->verts);
 
-    init_lerp_values(&startX, &leftColor, leftVertIdx, poly->verts);
-    init_lerp_values(&endX, &rightColor, rightVertIdx, poly->verts);
+    init_lerp_values(&startX, leftVertIdx, poly->verts);
+    init_lerp_values(&endX, rightVertIdx, poly->verts);
 
     /* Fill.*/
     for (;;)
@@ -167,15 +166,15 @@ void fill_poly(struct polygon_s *const poly)
         if (y == poly->verts[leftVertIdx + 1].y)
         {
             leftVertIdx++;
-            init_lerp_deltas(&deltaStartX, &deltaLeftColor, 1, leftVertIdx, poly->verts);
-            init_lerp_values(&startX, &leftColor, leftVertIdx, poly->verts);
+            init_lerp_deltas(&deltaStartX, 1, leftVertIdx, poly->verts);
+            init_lerp_values(&startX, leftVertIdx, poly->verts);
         }
 
         if (y == poly->verts[rightVertIdx - 1].y)
         {
             rightVertIdx--;
-            init_lerp_deltas(&deltaEndX, &deltaRightColor, -1, rightVertIdx, poly->verts);
-            init_lerp_values(&endX, &rightColor, rightVertIdx, poly->verts);
+            init_lerp_deltas(&deltaEndX, -1, rightVertIdx, poly->verts);
+            init_lerp_values(&endX, rightVertIdx, poly->verts);
         }
 
         /* When we reach the bottom of the polygon, we're done.*/
@@ -185,29 +184,29 @@ void fill_poly(struct polygon_s *const poly)
         }
 
         /* Fill the current raster line.*/
-        if (y >= 0 &&
-            (endX - startX) > 0)
+        if ((y >= 0) && (endX > startX))
         {
-            unsigned x;
+            const float lineWidth = (endX - startX + 1);
 
-            /* Horizontal deltas.*/
-            float currentColor = leftColor;
-            float deltaCurrentColor = ((rightColor - leftColor) / (endX - startX));
+            /* Horizontal interpolated values.*/
+            float textureU = 0;
 
-            for (x = startX; x < endX; x++)
+            /* Horizontal interpolation deltas.*/
+            float deltaTextureU = (texture.width / lineWidth);
+
+            for (unsigned x = startX; x < endX; x++)
             {
-                VRAM_XY(x, y) = round(currentColor);
+                VRAM_XY(x, y) = texture.pixels[(unsigned)(floor(textureU) + (texture.height - floor(textureV) - 1) * texture.width)];
 
                 /* Increment horizontal deltas.*/
-                currentColor = (currentColor + deltaCurrentColor);
+                textureU += deltaTextureU;
             }
         }
 
         /* Increment vertical deltas.*/
         startX += deltaStartX;
         endX += deltaEndX;
-        leftColor += deltaLeftColor;
-        rightColor += deltaRightColor;
+        textureV += textureVDelta;
 
         y++;
     }

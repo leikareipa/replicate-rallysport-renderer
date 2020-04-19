@@ -15,6 +15,7 @@
 int main(void)
 {
     krender_enter_grapics_mode();
+    krender_use_palette(0);
     krender_clear_screen();
 
     /* Render a test model.*/

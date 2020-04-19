@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include "file.h"
 #include "renderer.h"
 #include "polygon.h"
 
@@ -52,6 +53,41 @@ static int current_video_mode(void)
     int86(0x10, &regs, &regs);
 
     return regs.h.al;
+}
+
+void krender_use_palette(const unsigned paletteIdx)
+{
+    assert((CURRENT_VIDEO_MODE == VIDEO_MODE_GRAPHICS) && "Can only set the palette while in graphics mode.");
+
+    assert((paletteIdx < 5) && "Palette index out of bounds.");
+
+    const file_handle_t rallyeHandle = kfile_open_file("RALLYE.EXE", "rb");
+
+    // Seek to the start of the palette block.
+    // (There are 32 colors per palette, and 3 color channels (rgb) per color.)
+    const uint32_t paletteByteOffs = (131798 + (paletteIdx * 32 * 3));
+    kfile_seek(paletteByteOffs, rallyeHandle);
+
+    // Read in all 32 primary colors of the palette.
+    for (unsigned i = 0; i < 32; i++)
+    {
+        uint8_t color[3];
+
+        kfile_read_byte_array(color, 3, rallyeHandle);
+
+        // Assume __GNUC__ is defined if we're compiling on a modern
+        // platform, which should just ignore the DOS stuff.
+        #ifndef __GNUC__
+            outp(0x03c8, i);
+            outp(0x03c9, color[0]);
+            outp(0x03c9, color[1]);
+            outp(0x03c9, color[2]);
+        #endif
+    }
+
+    kfile_close_file(rallyeHandle);
+
+    return;
 }
 
 void krender_clear_screen(void)

@@ -1,5 +1,5 @@
 # Replicate Rally-Sport's rendering
-This casual repo aims to produce - eventually - a renderer that faithfully replicates the look of the classic mid-90s racing game, Rally-Sport.
+This casual repo aims to produce - eventually - a renderer that faithfully replicates the look of the classic mid-90s racing game Rally-Sport.
 
 (Much of the game's appearance is already successfully imitated by [RallySportED-js](https://www.github.com/leikareipa/rallysported-js/), albeit in true 3D rather than by fully embracing Rally-Sport's hybrid rendering approach, which this project aims to do.)
 
