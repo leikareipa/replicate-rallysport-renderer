@@ -9,12 +9,15 @@
 #define RENDERER_H
 
 struct polygon_s;
+struct mesh_s;
 
 enum
 {
     VIDEO_MODE_GRAPHICS = 0x13,
     VIDEO_MODE_TEXT = 0x3
 };
+
+void krender_move_camera(void);
 
 // Places the display in VGA video mode 13h. Returns true on success; false
 // otherwise.
@@ -32,7 +35,10 @@ void krender_use_palette(const unsigned paletteIdx);
 int krender_enter_text_mode(void);
 
 // Wipes the screen to blank.
-void krender_clear_screen(void);
+void krender_clear_surface(void);
+
+// Renders the given mesh.
+void krender_draw_mesh(const struct mesh_s *const mesh);
 
 // Temporary function. Renders something to the screen to allow the user to
 // verify that the renderer is working.

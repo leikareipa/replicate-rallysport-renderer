@@ -123,9 +123,6 @@ static unsigned sort_vertices_ccw(struct polygon_s *poly)
 
 void fill_poly(struct polygon_s *const poly)
 {
-    /// Texture created for temporary testing.
-    const struct texture_s *texture = ktexture_prop_texture(16);
-
     if (!poly->numVerts)
     {
         return;
@@ -143,7 +140,7 @@ void fill_poly(struct polygon_s *const poly)
 
     /* Vertical interpolation deltas.*/
     float deltaStartX, deltaEndX;
-    float textureVDelta = (texture->height / (float)polyHeight);
+    float textureVDelta = (poly->texture? (poly->texture->height / (float)polyHeight) : 0);
 
     /* Vertical interpolated values.*/
     float startX, endX;
@@ -192,11 +189,15 @@ void fill_poly(struct polygon_s *const poly)
             float textureU = 0;
 
             /* Horizontal interpolation deltas.*/
-            float deltaTextureU = (texture->width / lineWidth);
+            float deltaTextureU = (poly->texture? (poly->texture->width / lineWidth) : 0);
 
             for (unsigned x = startX; x < endX; x++)
             {
-                VRAM_XY(x, y) = texture->pixels[(unsigned)(floor(textureU) + (texture->height - floor(textureV) - 1) * texture->width)];
+                const unsigned color = (poly->texture
+                                        ? poly->texture->pixels[(unsigned)(floor(textureU) + (poly->texture->height - floor(textureV) - 1) * poly->texture->width)]
+                                        : poly->color);
+
+                VRAM_XY(x, y) = color;
 
                 /* Increment horizontal deltas.*/
                 textureU += deltaTextureU;

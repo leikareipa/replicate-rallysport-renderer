@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <string.h>
 #include "file.h"
+#include "mesh.h"
 #include "renderer.h"
 #include "polygon.h"
 
@@ -69,16 +70,19 @@ void krender_initialize(void)
     RENDER_BUFFER = malloc(GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT);
 
     ktexture_initialize_textures();
+    kmesh_initialize_meshes();
 
     krender_enter_grapics_mode();
-    krender_clear_screen();
+    krender_clear_surface();
 
     return;
 }
 
 void krender_release(void)
 {
+    kmesh_release_meshes();
     ktexture_release_textures();
+
     free(RENDER_BUFFER);
 
     krender_enter_text_mode();
@@ -155,7 +159,14 @@ void krender_use_palette(const unsigned paletteIdx)
     return;
 }
 
-void krender_clear_screen(void)
+void krender_move_camera(void)
+{
+    CAMERA_POS.x -= 1;
+
+    return;
+}
+
+void krender_clear_surface(void)
 {
     switch (CURRENT_VIDEO_MODE)
     {
@@ -172,6 +183,28 @@ void krender_clear_screen(void)
         default: assert(0 && "Unknown video mode.");
     }
 
+    return;
+}
+
+void krender_draw_mesh(const struct mesh_s *const mesh)
+{
+    static struct polygon_s poly = {0};
+    if (!poly.verts)
+    {
+        poly.verts = malloc(sizeof(struct polygon_s) * 10);
+    }
+
+    for (unsigned i = 0; i < mesh->numPolys; i++)
+    {
+        poly.color = mesh->polys[i].color;
+        poly.numVerts = mesh->polys[i].numVerts;
+        poly.texture = mesh->polys[i].texture;
+        memcpy(poly.verts, mesh->polys[i].verts, sizeof(struct vertex_s) * mesh->polys[i].numVerts);
+
+        transform_poly(&poly);
+        fill_poly(&poly);
+    }
+    
     return;
 }
 

@@ -13,14 +13,14 @@
 
 struct polygon_s
 {
-    unsigned numVerts;
+    uint16_t numVerts;
     struct vertex_s *verts;
 
     uint8_t color; /* Palette index.*/
     struct texture_s *texture;
 };
 
-struct polygon_s kpolygon_create_polygon(const unsigned numVerts);
+struct polygon_s kpolygon_create_polygon(const uint16_t numVerts);
 
 void kpolygon_release_polygon(struct polygon_s *const polygon);
 

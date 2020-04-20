@@ -119,7 +119,7 @@ void ktexture_initialize_textures(void)
     PALA_TEXTURES = kelpo_generic_stack__create(255, sizeof(struct texture_s));
 
     // Load all prop textures.
-    for (struct texture_s texture; texture.pixels; texture = load_from_text(PROP_TEXTURES->count))
+    for (struct texture_s texture = load_from_text(PROP_TEXTURES->count); texture.pixels; texture = load_from_text(PROP_TEXTURES->count))
     {
         kelpo_generic_stack__push_copy(PROP_TEXTURES, &texture);
     }

@@ -9,7 +9,7 @@
 #include "polygon.h"
 #include "vertex.h"
 
-struct polygon_s kpolygon_create_polygon(const unsigned numVerts)
+struct polygon_s kpolygon_create_polygon(const uint16_t numVerts)
 {
     struct polygon_s poly;
     

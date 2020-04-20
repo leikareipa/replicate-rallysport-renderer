@@ -7,33 +7,36 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <time.h>
+#include "mesh.h"
 #include "renderer.h"
 #include "polygon.h"
-
-#include "../bin/gate.c"
 
 int main(void)
 {
     krender_initialize();
     krender_use_palette(0);
 
-    /* Render a test model.*/
+    time_t startTime = time(NULL);
+    unsigned numFrames = 0;
+
+    while ((time(NULL) - startTime < 6))
     {
-        struct polygon_s *model = gate_model();
-
-        for (int i = gateModelPolyCount-1; i >= 0; i--)
-        {
-            krender_draw_test_pattern(&model[i]);
-            kpolygon_release_polygon(&model[i]);
-        }
-
-        free(model);
+        krender_clear_surface();
+        krender_draw_mesh(kmesh_prop_mesh(14));
+        krender_draw_mesh(kmesh_prop_mesh(7));
+        krender_draw_mesh(kmesh_prop_mesh(3));
+        krender_draw_mesh(kmesh_prop_mesh(1));
+        krender_flip_surface();
+        
+        krender_move_camera();
+        
+        numFrames++;
     }
-    
-    krender_flip_surface();
-    getchar();
 
     krender_release();
-    
+
+    printf("~%f FPS\n", (numFrames / (float)(time(NULL) - startTime)));
+
     return 0;
 }
