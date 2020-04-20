@@ -59,14 +59,16 @@ static int current_video_mode(void)
         int86(0x10, &regs, &regs);
 
         return regs.h.al;
+    #else
+        return CURRENT_VIDEO_MODE;
     #endif
-
-    return VIDEO_MODE_GRAPHICS;
 }
 
 void krender_initialize(void)
 {
     RENDER_BUFFER = malloc(GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT);
+
+    ktexture_initialize_textures();
 
     krender_enter_grapics_mode();
     krender_clear_screen();
@@ -76,6 +78,7 @@ void krender_initialize(void)
 
 void krender_release(void)
 {
+    ktexture_release_textures();
     free(RENDER_BUFFER);
 
     krender_enter_text_mode();

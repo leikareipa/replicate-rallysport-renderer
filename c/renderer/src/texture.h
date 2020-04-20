@@ -24,9 +24,13 @@ enum
     TEXTURE_SOURCE_ANIMS,      /* ANIMS.DTA*/
 };
 
-/* Loads and returns the texture at the given index in the given texture source.
- * For instance, to load the 4th texture in PALAT.002, you'd call this function
- * like so: ktexture_load_texture(3, TEXTURE_SOURCE_PALAT_002).*/
-struct texture_s ktexture_load_texture(const unsigned idx, const int sourceEnum);
+// Loads all textures into memory, etc.
+void ktexture_initialize_textures(void);
+
+// Frees up any texture memory allocated by ktexture_initialize_textures(), etc.
+void ktexture_release_textures(void);
+
+// Returns the prop texture at the given index.
+struct texture_s* ktexture_prop_texture(const unsigned propTextureIdx);
 
 #endif
