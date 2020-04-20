@@ -245,7 +245,7 @@ int krender_enter_grapics_mode(void)
         CURRENT_VIDEO_MODE = current_video_mode();
     #else
         window = SDL_CreateWindow("Rally-Sport render test", 0, 0, 1280, 800, 0);
-        renderer = SDL_CreateRenderer(window, -1, 0);
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
         texture = SDL_CreateTexture(renderer,
                                     SDL_PIXELFORMAT_ABGR8888,
                                     SDL_TEXTUREACCESS_STREAMING,

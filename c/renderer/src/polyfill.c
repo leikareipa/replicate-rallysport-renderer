@@ -140,11 +140,11 @@ void fill_poly(struct polygon_s *const poly)
 
     /* Vertical interpolation deltas.*/
     float deltaStartX, deltaEndX;
-    float textureVDelta = (poly->texture? (poly->texture->height / (float)polyHeight) : 0);
+    uint16_t textureVDelta = (poly->texture? (poly->texture->height / (float)polyHeight) : 0) * (1l << 8);
 
     /* Vertical interpolated values.*/
     float startX, endX;
-    float textureV = 0;
+    uint16_t textureV = 0;
 
     init_lerp_deltas(&deltaStartX, 1, leftVertIdx, poly->verts);
     init_lerp_deltas(&deltaEndX, -1, rightVertIdx, poly->verts);
@@ -186,15 +186,15 @@ void fill_poly(struct polygon_s *const poly)
             const float lineWidth = (endX - startX + 1);
 
             /* Horizontal interpolated values.*/
-            float textureU = 0;
+            uint16_t textureU = 0;
 
             /* Horizontal interpolation deltas.*/
-            float deltaTextureU = (poly->texture? (poly->texture->width / lineWidth) : 0);
+            uint16_t deltaTextureU = (poly->texture? (poly->texture->width / lineWidth) : 0) * (1l << 8);
 
             for (unsigned x = startX; x < endX; x++)
             {
                 const unsigned color = (poly->texture
-                                        ? poly->texture->pixels[(unsigned)(floor(textureU) + (poly->texture->height - floor(textureV) - 1) * poly->texture->width)]
+                                        ? poly->texture->pixels[(unsigned)((textureU >> 8) + (poly->texture->height - (textureV >> 8) - 1) * poly->texture->width)]
                                         : poly->color);
 
                 VRAM_XY(x, y) = color;

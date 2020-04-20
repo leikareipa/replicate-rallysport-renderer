@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 #include "mesh.h"
 #include "renderer.h"
 #include "polygon.h"
@@ -23,7 +24,7 @@ int main(void)
     while ((time(NULL) - startTime < 6))
     {
         krender_clear_surface();
-        krender_draw_mesh(kmesh_prop_mesh(14));
+        krender_draw_mesh(kmesh_prop_mesh(15));
         krender_draw_mesh(kmesh_prop_mesh(7));
         krender_draw_mesh(kmesh_prop_mesh(3));
         krender_draw_mesh(kmesh_prop_mesh(1));
@@ -36,7 +37,7 @@ int main(void)
 
     krender_release();
 
-    printf("~%f FPS\n", (numFrames / (float)(time(NULL) - startTime)));
+    printf("%d FPS\n", (int)round(numFrames / (float)(time(NULL) - startTime)));
 
     return 0;
 }
