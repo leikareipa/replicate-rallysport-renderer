@@ -16,7 +16,7 @@ const struct mesh_s* kground_ground_mesh(void);
 
 void kground_update_ground_mesh(void);
 
-void kground_initialize_ground(const char *const filename);
+void kground_initialize_ground(const unsigned groundIdx);
 
 void kground_release_ground(void);
 

@@ -19,8 +19,8 @@ void krender_transform_poly(struct polygon_s *const poly)
 
     for (unsigned i = 0; i < poly->numVerts; i++)
     {
-        poly->verts[i].x = ceil(screenWidthHalf + ((CAMERA_POS.x + poly->verts[i].x - screenWidthHalf) / (CAMERA_POS.z + poly->verts[i].z)));
-        poly->verts[i].y = ceil((CAMERA_POS.y + poly->verts[i].y) / (CAMERA_POS.z + poly->verts[i].z));
+        poly->verts[i].x = round(screenWidthHalf + ((CAMERA_POS.x + poly->verts[i].x - screenWidthHalf) / (CAMERA_POS.z + poly->verts[i].z)));
+        poly->verts[i].y = round((CAMERA_POS.y + poly->verts[i].y) / (CAMERA_POS.z + poly->verts[i].z));
     }
     
     return;

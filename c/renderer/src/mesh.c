@@ -65,8 +65,8 @@ struct mesh_s load_prop_mesh(const int propType)
             kfile_read_byte_array((uint8_t*)coords, (sizeof(*coords) * 3), rallyeHandle);
             
             vertexCoords[i].x = coords[0];
-            vertexCoords[i].y = -coords[1];
-            vertexCoords[i].z = -(coords[2] / 512.0);
+            vertexCoords[i].y = coords[1];
+            vertexCoords[i].z = ((coords[2]-3000) / 575.0);
         }
     }
 

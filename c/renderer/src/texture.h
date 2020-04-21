@@ -31,9 +31,9 @@ void ktexture_initialize_textures(void);
 void ktexture_release_textures(void);
 
 // Returns the prop texture at the given index.
-struct texture_s* ktexture_prop_texture(const unsigned propTextureIdx);
+struct texture_s* ktexture_prop_texture(unsigned propTextureIdx);
 
 // Returns the PALA texture at the given index.
-struct texture_s* ktexture_pala_texture(const unsigned palaTextureIdx);
+struct texture_s* ktexture_pala_texture(unsigned palaTextureIdx);
 
 #endif

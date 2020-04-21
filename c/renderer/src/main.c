@@ -22,7 +22,7 @@ int main(void)
     time_t startTime = time(NULL);
     unsigned numFrames = 0;
 
-    while ((time(NULL) - startTime < 3))
+   // while ((time(NULL) - startTime < 3))
     {
         krender_clear_surface();
         krender_draw_mesh(kground_ground_mesh(), 0);

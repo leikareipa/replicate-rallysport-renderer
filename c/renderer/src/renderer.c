@@ -34,19 +34,19 @@
     static uint8_t PALETTE[256][3];
 #endif
 
+static const unsigned GRAPHICS_MODE_WIDTH = 320;
+static const unsigned GRAPHICS_MODE_HEIGHT = 200;
+
 // A pixel buffer we'll do all rendering into. This is later copied into video
 // memory.
 static uint8_t *RENDER_BUFFER;
-#define VRAM_XY(x, y) RENDER_BUFFER[(x) + (y) * 320]
+#define VRAM_XY(x, y) RENDER_BUFFER[(x) + (y) * GRAPHICS_MODE_WIDTH]
 
 #define LERP(a, b, weight) ((a) + ((weight) * ((b) - (a))))
 
 static unsigned CURRENT_VIDEO_MODE = VIDEO_MODE_TEXT;
 
-static struct vertex_s CAMERA_POS = {300, -900, -5};
-
-static const unsigned GRAPHICS_MODE_WIDTH = 320;
-static const unsigned GRAPHICS_MODE_HEIGHT = 200;
+static struct vertex_s CAMERA_POS = {0, 800, 10};
 
 #include "polytrnf.c"
 #include "polyfill.c"
@@ -72,7 +72,7 @@ void krender_initialize(void)
 
     ktexture_initialize_textures();
     kmesh_initialize_meshes();
-    kground_initialize_ground("MAASTO.001");
+    kground_initialize_ground(3);
 
     krender_enter_grapics_mode();
     krender_clear_surface();

@@ -28,7 +28,7 @@ static struct texture_s load_from_pala(const unsigned textureIdx, const unsigned
 
     struct texture_s tex;
 
-    if (textureIdx > 240)
+    if (textureIdx > 250)
     {
         tex.pixels = NULL;
         return tex;
@@ -124,13 +124,23 @@ static struct texture_s load_from_text(const unsigned textureIdx)
     return tex;
 }
 
-struct texture_s* ktexture_prop_texture(const unsigned propTextureIdx)
+struct texture_s* ktexture_prop_texture(unsigned propTextureIdx)
 {
+    if (propTextureIdx > PROP_TEXTURES->count)
+    {
+        propTextureIdx = 0;
+    }
+
     return (struct texture_s*)kelpo_generic_stack__at(PROP_TEXTURES, propTextureIdx);
 }
 
-struct texture_s* ktexture_pala_texture(const unsigned palaTextureIdx)
+struct texture_s* ktexture_pala_texture(unsigned palaTextureIdx)
 {
+    if (palaTextureIdx > PALA_TEXTURES->count)
+    {
+        palaTextureIdx = 0;
+    }
+
     return (struct texture_s*)kelpo_generic_stack__at(PALA_TEXTURES, palaTextureIdx);
 }
 
