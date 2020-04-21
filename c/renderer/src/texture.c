@@ -43,7 +43,17 @@ static struct texture_s load_from_pala(const unsigned textureIdx, const unsigned
 
     const file_handle_t palaHandle = kfile_open_file(filename, "rb");
     kfile_seek((textureIdx * 256), palaHandle);
-    kfile_read_byte_array(tex.pixels, (tex.width * tex.height), palaHandle);
+
+    // Copy this texture's data from the PALAT texture atlas. Note that we flip
+    // the texture on the vertical axis so that it doesn't render upside down.
+    for (unsigned y = 0; y < tex.height; y++)
+    {
+        for (unsigned x = 0; x < tex.width; x++)
+        {
+            kfile_read_byte_array(&tex.pixels[x + (tex.height - y - 1) * tex.width], 1, palaHandle);
+        }
+    }
+
     kfile_close_file(palaHandle);
 
     return tex;
@@ -95,14 +105,16 @@ static struct texture_s load_from_text(const unsigned textureIdx)
     kfile_read_byte_array((uint8_t*)&yOffset, 1, rallyeHandle);
     yOffset *= 2;
 
-    // Copy this texture's data from the TEXT1.DTA texture atlas.
+    // Copy this texture's data from the TEXT1.DTA texture atlas. Note that we
+    // flip the texture on the vertical axis so that it doesn't render upside
+    // down.
     for (unsigned y = 0; y < tex.height; y++)
     {
         kfile_seek((xOffset + (yOffset + y) * 128), textHandle);
 
         for (unsigned x = 0; x < tex.width; x++)
         {
-            kfile_read_byte_array(&tex.pixels[x + y * tex.width], 1, textHandle);
+            kfile_read_byte_array(&tex.pixels[x + (tex.height - y - 1) * tex.width], 1, textHandle);
         }
     }
 

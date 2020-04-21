@@ -29,7 +29,7 @@ int main(void)
         krender_draw_mesh(kmesh_prop_mesh(15), 1);
         krender_flip_surface();
         
-       // krender_move_camera();
+        krender_move_camera();
         
         numFrames++;
     }

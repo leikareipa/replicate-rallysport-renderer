@@ -196,7 +196,7 @@ void fill_poly(struct polygon_s *const poly)
             if (poly->texture)
             {
                 deltaTextureU = ((poly->texture->width / lineWidth) * (1l << 8));
-                baseTexelIdx = ((poly->texture->height - (textureV >> 8) - 1) * poly->texture->width);
+                baseTexelIdx = ((textureV >> 8) * poly->texture->width);
             }
             else
             {

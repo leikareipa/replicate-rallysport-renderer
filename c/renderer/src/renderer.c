@@ -164,7 +164,7 @@ void krender_use_palette(const unsigned paletteIdx)
 
 void krender_move_camera(void)
 {
-    CAMERA_POS.x += 2;
+    CAMERA_POS.x += 8;
 
     return;
 }
