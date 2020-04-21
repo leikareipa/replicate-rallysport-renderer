@@ -65,7 +65,7 @@ int compareY(const void *a, const void *b)
 
 /* Sorts the polygon's vertices in counter-clockwise order, starting from the
  * top (lowest Y) and winding around the polygon back to the top.*/
-static unsigned sort_vertices_ccw(struct polygon_s *poly)
+static int sort_vertices_ccw(struct polygon_s *poly)
 {
     unsigned i;
     unsigned numLeftVerts = 0;
@@ -86,7 +86,7 @@ static unsigned sort_vertices_ccw(struct polygon_s *poly)
     
     struct vertex_s *const topVert = &poly->verts[0];
     struct vertex_s *const bottomVert = &poly->verts[poly->numVerts - 1];
-    const unsigned polyHeight = (bottomVert->y - topVert->y);
+    const int polyHeight = (bottomVert->y - topVert->y);
 
     leftVerts[numLeftVerts++] = *topVert;
 
@@ -128,13 +128,13 @@ void fill_poly(struct polygon_s *const poly)
         return;
     }
 
-    const unsigned polyHeight = sort_vertices_ccw(poly);
+    const int polyHeight = sort_vertices_ccw(poly);
 
     /* Complete the vertex loop by connecting an extra vertex at the end to
      * the beginning. This simplifies rendering.*/
     poly->verts[poly->numVerts] = poly->verts[0];
 
-    unsigned y = poly->verts[0].y;
+    int y = poly->verts[0].y;
     unsigned leftVertIdx = 0;
     unsigned rightVertIdx = poly->numVerts;
 
@@ -204,14 +204,18 @@ void fill_poly(struct polygon_s *const poly)
                 baseTexelIdx = 0;
             }
             
-
-            for (unsigned x = startX; x < endX; x++)
+            for (int x = startX; x < endX; x++)
             {
-                const unsigned color = (poly->texture
-                                        ? poly->texture->pixels[baseTexelIdx + (textureU >> 8)]
-                                        : poly->color);
+                if (x >= (int)GRAPHICS_MODE_WIDTH) break;
 
-                VRAM_XY(x, y) = color;
+                if (x >= 0)
+                {
+                    const unsigned color = (poly->texture
+                                            ? poly->texture->pixels[baseTexelIdx + (textureU >> 8)]
+                                            : poly->color);
+
+                    VRAM_XY(x, y) = color;
+                }
 
                 /* Increment horizontal deltas.*/
                 textureU += deltaTextureU;
