@@ -19,11 +19,21 @@
 static struct kelpo_generic_stack_s *PALA_TEXTURES;
 static struct kelpo_generic_stack_s *PROP_TEXTURES;
 
+// Loads and returns the texture at the given index in Rally-Sport's PALA.00x
+// file. In case of an error, the pixel data pointer of the retuned texture
+// will be set to NULL.
 static struct texture_s load_from_pala(const unsigned textureIdx, const unsigned palaIdx)
 {
-    assert((palaIdx < 2) && "PALA index out of bounds.");
+    assert((palaIdx < 2) && "PALA file index out of bounds.");
 
     struct texture_s tex;
+
+    if (textureIdx > 240)
+    {
+        tex.pixels = NULL;
+        return tex;
+    }
+
     tex.width = 16;
     tex.height = 16;
     tex.pixels = malloc(tex.width * tex.height);
@@ -39,8 +49,9 @@ static struct texture_s load_from_pala(const unsigned textureIdx, const unsigned
     return tex;
 }
 
-// Loads the texture at the given index in the TEXT1.DTA file. In case of error,
-// the pixel data pointer of the retuned texture will be set to NULL.
+// Loads and returns the texture at the given index in Rally-Sport's TEXT1.DTA
+// file. In case of an error, the pixel data pointer of the retuned texture will
+// be set to NULL.
 static struct texture_s load_from_text(const unsigned textureIdx)
 {
     struct texture_s tex;
@@ -106,9 +117,25 @@ struct texture_s* ktexture_prop_texture(const unsigned propTextureIdx)
     return (struct texture_s*)kelpo_generic_stack__at(PROP_TEXTURES, propTextureIdx);
 }
 
+struct texture_s* ktexture_pala_texture(const unsigned palaTextureIdx)
+{
+    return (struct texture_s*)kelpo_generic_stack__at(PALA_TEXTURES, palaTextureIdx);
+}
+
 void ktexture_release_textures(void)
 {
+    for (unsigned i = 0; i < PROP_TEXTURES->count; i++)
+    {
+        free(((struct texture_s*)kelpo_generic_stack__at(PROP_TEXTURES, i))->pixels);
+    }
+
+    for (unsigned i = 0; i < PALA_TEXTURES->count; i++)
+    {
+        free(((struct texture_s*)kelpo_generic_stack__at(PALA_TEXTURES, i))->pixels);
+    }
+
     kelpo_generic_stack__free(PROP_TEXTURES);
+    kelpo_generic_stack__free(PALA_TEXTURES);
 
     return;
 }
@@ -119,9 +146,29 @@ void ktexture_initialize_textures(void)
     PALA_TEXTURES = kelpo_generic_stack__create(255, sizeof(struct texture_s));
 
     // Load all prop textures.
-    for (struct texture_s texture = load_from_text(PROP_TEXTURES->count); texture.pixels; texture = load_from_text(PROP_TEXTURES->count))
+    for (struct texture_s tex;;)
     {
-        kelpo_generic_stack__push_copy(PROP_TEXTURES, &texture);
+        if ((tex = load_from_text(PROP_TEXTURES->count)).pixels)
+        {
+            kelpo_generic_stack__push_copy(PROP_TEXTURES, &tex);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    // Load all PALA textures.
+    for (struct texture_s tex;;)
+    {
+        if ((tex = load_from_pala(PALA_TEXTURES->count, 0)).pixels)
+        {
+            kelpo_generic_stack__push_copy(PALA_TEXTURES, &tex);
+        }
+        else
+        {
+            break;
+        }
     }
 
     return;

@@ -189,12 +189,26 @@ void fill_poly(struct polygon_s *const poly)
             uint16_t textureU = 0;
 
             /* Horizontal interpolation deltas.*/
-            uint16_t deltaTextureU = (poly->texture? (poly->texture->width / lineWidth) : 0) * (1l << 8);
+            uint16_t deltaTextureU;
+
+            unsigned baseTexelIdx;
+
+            if (poly->texture)
+            {
+                deltaTextureU = ((poly->texture->width / lineWidth) * (1l << 8));
+                baseTexelIdx = ((poly->texture->height - (textureV >> 8) - 1) * poly->texture->width);
+            }
+            else
+            {
+                deltaTextureU = 0;
+                baseTexelIdx = 0;
+            }
+            
 
             for (unsigned x = startX; x < endX; x++)
             {
                 const unsigned color = (poly->texture
-                                        ? poly->texture->pixels[(unsigned)((textureU >> 8) + (poly->texture->height - (textureV >> 8) - 1) * poly->texture->width)]
+                                        ? poly->texture->pixels[baseTexelIdx + (textureU >> 8)]
                                         : poly->color);
 
                 VRAM_XY(x, y) = color;
@@ -212,9 +226,9 @@ void fill_poly(struct polygon_s *const poly)
         y++;
     }
 
-    /* Visually indicate the locations of the poly's vertices. For debugging
-     * reasons.*/
-   /* for (y = 0; y < poly->numVerts; y++)
+    // Visually indicate the locations of the poly's vertices. For debugging
+    // reasons.
+    /*for (y = 0; y < poly->numVerts; y++)
     {
         VRAM_XY(poly->verts[y].x, poly->verts[y].y) = y%10+10;
     }*/

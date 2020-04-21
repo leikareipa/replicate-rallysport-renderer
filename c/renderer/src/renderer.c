@@ -25,9 +25,9 @@
 #else // We'll render into an SDL surface if not on DOS.
     #include <SDL2/SDL.h>
 
-    static SDL_Window *window;
-    static SDL_Renderer *renderer;
-    static SDL_Texture *texture;
+    static SDL_Window *sdlWindow;
+    static SDL_Renderer *sdlRenderer;
+    static SDL_Texture *sdlTexture;
 
     // Color indices in the render buffer point to RGB values in this palette.
     static uint8_t PALETTE[256][3];
@@ -114,9 +114,9 @@ void krender_flip_surface(void)
             scratch[(i * 4) + 3] = 255;
         }
 
-        SDL_UpdateTexture(texture, NULL, scratch, (GRAPHICS_MODE_WIDTH * 4));
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
-        SDL_RenderPresent(renderer);
+        SDL_UpdateTexture(sdlTexture, NULL, scratch, (GRAPHICS_MODE_WIDTH * 4));
+        SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
+        SDL_RenderPresent(sdlRenderer);
     #endif
 
     return;
@@ -244,13 +244,13 @@ int krender_enter_grapics_mode(void)
 
         CURRENT_VIDEO_MODE = current_video_mode();
     #else
-        window = SDL_CreateWindow("Rally-Sport render test", 0, 0, 1280, 800, 0);
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-        texture = SDL_CreateTexture(renderer,
-                                    SDL_PIXELFORMAT_ABGR8888,
-                                    SDL_TEXTUREACCESS_STREAMING,
-                                    GRAPHICS_MODE_WIDTH,
-                                    GRAPHICS_MODE_HEIGHT);
+        sdlWindow = SDL_CreateWindow("Rally-Sport render test", 0, 0, 1280, 800, 0);
+        sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);
+        sdlTexture = SDL_CreateTexture(sdlRenderer,
+                                       SDL_PIXELFORMAT_ABGR8888,
+                                       SDL_TEXTUREACCESS_STREAMING,
+                                       GRAPHICS_MODE_WIDTH,
+                                       GRAPHICS_MODE_HEIGHT);
 
         CURRENT_VIDEO_MODE = VIDEO_MODE_GRAPHICS;
     #endif
@@ -269,9 +269,9 @@ int krender_enter_text_mode(void)
 
         CURRENT_VIDEO_MODE = current_video_mode();
     #else 
-        SDL_DestroyWindow(window);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyTexture(texture);
+        SDL_DestroyWindow(sdlWindow);
+        SDL_DestroyRenderer(sdlRenderer);
+        SDL_DestroyTexture(sdlTexture);
 
         CURRENT_VIDEO_MODE = VIDEO_MODE_TEXT;
     #endif

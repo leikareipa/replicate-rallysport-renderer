@@ -21,13 +21,10 @@ int main(void)
     time_t startTime = time(NULL);
     unsigned numFrames = 0;
 
-    while ((time(NULL) - startTime < 6))
+    //while ((time(NULL) - startTime < 6))
     {
         krender_clear_surface();
         krender_draw_mesh(kmesh_prop_mesh(15));
-        krender_draw_mesh(kmesh_prop_mesh(7));
-        krender_draw_mesh(kmesh_prop_mesh(3));
-        krender_draw_mesh(kmesh_prop_mesh(1));
         krender_flip_surface();
         
         krender_move_camera();
@@ -35,6 +32,7 @@ int main(void)
         numFrames++;
     }
 
+    getchar();
     krender_release();
 
     printf("%d FPS\n", (int)round(numFrames / (float)(time(NULL) - startTime)));
