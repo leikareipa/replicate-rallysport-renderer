@@ -38,11 +38,7 @@ int krender_enter_text_mode(void);
 void krender_clear_surface(void);
 
 // Renders the given mesh.
-void krender_draw_mesh(const struct mesh_s *const mesh);
-
-// Temporary function. Renders something to the screen to allow the user to
-// verify that the renderer is working.
-void krender_draw_test_pattern(struct polygon_s *const poly);
+void krender_draw_mesh(const struct mesh_s *const mesh, int doTransform);
 
 // Prepare the render surface for drawing. In DOS, this means entering VGA mode
 // 13h.
@@ -51,6 +47,9 @@ void krender_initialize(void);
 // Release the render surface. In DOS, this means leaving the graphics video
 // mode and entering text mode.
 void krender_release(void);
+
+// Transforms the given polygon into screen space.
+void krender_transform_poly(struct polygon_s *const poly);
 
 unsigned krender_current_video_mode(void);
 

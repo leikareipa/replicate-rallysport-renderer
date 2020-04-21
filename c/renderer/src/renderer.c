@@ -11,6 +11,7 @@
 #include <string.h>
 #include "file.h"
 #include "mesh.h"
+#include "ground.h"
 #include "renderer.h"
 #include "polygon.h"
 
@@ -36,7 +37,7 @@
 // A pixel buffer we'll do all rendering into. This is later copied into video
 // memory.
 static uint8_t *RENDER_BUFFER;
-#define VRAM_XY(x, y) RENDER_BUFFER[(unsigned)(x) + (unsigned)(y) * 320]
+#define VRAM_XY(x, y) RENDER_BUFFER[(x) + (y) * 320]
 
 #define LERP(a, b, weight) ((a) + ((weight) * ((b) - (a))))
 
@@ -71,6 +72,7 @@ void krender_initialize(void)
 
     ktexture_initialize_textures();
     kmesh_initialize_meshes();
+    kground_initialize_ground("MAASTO.001");
 
     krender_enter_grapics_mode();
     krender_clear_surface();
@@ -82,6 +84,7 @@ void krender_release(void)
 {
     kmesh_release_meshes();
     ktexture_release_textures();
+    kground_release_ground();
 
     free(RENDER_BUFFER);
 
@@ -161,7 +164,7 @@ void krender_use_palette(const unsigned paletteIdx)
 
 void krender_move_camera(void)
 {
-    CAMERA_POS.x -= 1;
+    CAMERA_POS.x += 2;
 
     return;
 }
@@ -186,7 +189,7 @@ void krender_clear_surface(void)
     return;
 }
 
-void krender_draw_mesh(const struct mesh_s *const mesh)
+void krender_draw_mesh(const struct mesh_s *const mesh, int doTransform)
 {
     static struct polygon_s poly = {0};
     if (!poly.verts)
@@ -201,30 +204,13 @@ void krender_draw_mesh(const struct mesh_s *const mesh)
         poly.texture = mesh->polys[i].texture;
         memcpy(poly.verts, mesh->polys[i].verts, sizeof(struct vertex_s) * mesh->polys[i].numVerts);
 
-        transform_poly(&poly);
+        if (doTransform)
+        {
+            krender_transform_poly(&poly);
+        }
         fill_poly(&poly);
     }
     
-    return;
-}
-
-void krender_draw_test_pattern(struct polygon_s *const poly)
-{
-    switch (CURRENT_VIDEO_MODE)
-    {
-        case VIDEO_MODE_TEXT:
-        {
-            printf("TEST PATTERN.\n");
-            break;
-        }
-        case VIDEO_MODE_GRAPHICS:
-        {
-            transform_poly(poly);
-            fill_poly(poly);
-            break;
-        }
-    }
-
     return;
 }
 

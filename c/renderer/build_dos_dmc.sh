@@ -10,6 +10,7 @@ src/file.c
 src/texture.c
 src/generic_stack.c
 src/mesh.c
+src/ground.c
 "
 
 wine "$DMC_PATH/bin/dmc.exe" $SOURCE_FILES $BUILD_OPTIONS -I$DMC_PATH\\include
