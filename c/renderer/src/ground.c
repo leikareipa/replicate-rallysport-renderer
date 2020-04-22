@@ -24,8 +24,8 @@ static uint8_t *TILEMAP;
 
 // A polygonal, renderable mesh representing the ground.
 static struct mesh_s GROUND_MESH;
-static unsigned GROUND_MESH_WIDTH = 15; // In units of tiles.
-static unsigned GROUND_MESH_HEIGHT = 22;
+static unsigned GROUND_MESH_WIDTH = 23; // In units of tiles.
+static unsigned GROUND_MESH_HEIGHT = 24;
 
 int kground_width(void)
 {
@@ -49,8 +49,8 @@ void kground_update_ground_mesh(void)
     {
         for (unsigned x = 0; x < GROUND_MESH_WIDTH; x++)
         {
-            const int tileX = x+9;
-            const int tileY = z+31;
+            const int tileX = x+3;
+            const int tileY = z+22;
 
             const int vertX = ((x * 128) - ((GROUND_MESH_WIDTH/2 - 1) * 128));
             const int vertZ = ((-z * 128) - 700);
