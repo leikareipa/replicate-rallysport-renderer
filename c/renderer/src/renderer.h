@@ -17,8 +17,6 @@ enum
     VIDEO_MODE_TEXT = 0x3
 };
 
-void krender_move_camera(void);
-
 // Places the display in VGA video mode 13h. Returns true on success; false
 // otherwise.
 int krender_enter_grapics_mode(void);

@@ -168,11 +168,16 @@ struct mesh_s load_prop_mesh(const int propType)
     return mesh;
 }
 
-struct mesh_s* kmesh_prop_mesh(const int propType)
+struct mesh_s kmesh_prop_mesh(const int propType, const float x, const float y, const float z)
 {
     assert(((propType >= 0) && (propType <= PROP_TYPE_COUNT)) && "Accessing props out of bounds.");
 
-    return &PROP_MESHES[propType];
+    struct mesh_s mesh = PROP_MESHES[propType];
+    mesh.x = x;
+    mesh.y = y;
+    mesh.z = z;
+
+    return mesh;
 }
 
 void kmesh_initialize_meshes(void)

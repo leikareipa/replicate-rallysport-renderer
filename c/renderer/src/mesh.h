@@ -14,6 +14,10 @@ struct mesh_s
 {
     unsigned numPolys;
     struct polygon_s *polys;
+
+    // The mesh's world position. These values will be added to copies of the
+    // mesh's polygon vertex values at render-time.
+    float x, y, z;
 };
 
 enum
@@ -39,8 +43,9 @@ enum
     PROP_TYPE_COUNT
 };
 
-// Returns the polygon mesh of the prop of the given type (e.g. PROP_TYPE_TREE).
-struct mesh_s* kmesh_prop_mesh(const int propType);
+// Returns the polygon mesh of the prop of the given type (e.g. PROP_TYPE_TREE)
+// positioned at the given XYZ world coordinates.
+struct mesh_s kmesh_prop_mesh(const int propType, const float x, const float y, const float z);
 
 void kmesh_initialize_meshes(void);
 

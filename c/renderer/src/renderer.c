@@ -162,13 +162,6 @@ void krender_use_palette(const unsigned paletteIdx)
     return;
 }
 
-void krender_move_camera(void)
-{
-    CAMERA_POS.x += 8;
-
-    return;
-}
-
 void krender_clear_surface(void)
 {
     switch (CURRENT_VIDEO_MODE)
@@ -207,6 +200,14 @@ void krender_draw_mesh(const struct mesh_s *const mesh, const int doTransform)
         struct polygon_s poly = mesh->polys[i];
         poly.verts = vertexScratch;
         memcpy(poly.verts, mesh->polys[i].verts, sizeof(struct vertex_s) * mesh->polys[i].numVerts);
+
+        // Apply the mesh's world position to the copies of its vertices.
+        for (unsigned v = 0; v < poly.numVerts; v++)
+        {
+            poly.verts[v].x += mesh->x;
+            poly.verts[v].y += mesh->y;
+            poly.verts[v].z += mesh->z;
+        }
 
         if (doTransform)
         {
