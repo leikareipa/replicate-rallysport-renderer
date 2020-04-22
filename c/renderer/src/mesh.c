@@ -64,9 +64,9 @@ struct mesh_s load_prop_mesh(const int propType)
             int16_t coords[3];
             kfile_read_byte_array((uint8_t*)coords, (sizeof(*coords) * 3), rallyeHandle);
             
-            vertexCoords[i].x = coords[0];
-            vertexCoords[i].y = coords[1];
-            vertexCoords[i].z = ((coords[2]-3000) / 575.0);
+            vertexCoords[i].x = coords[0] + 55;
+            vertexCoords[i].y = coords[1]+270;
+            vertexCoords[i].z = ((coords[2]-1500) / 575.0);
         }
     }
 
@@ -122,6 +122,8 @@ struct mesh_s load_prop_mesh(const int propType)
         // Construct the polygon.
         struct polygon_s poly = kpolygon_create_polygon(numVerts);
         {
+            poly.visible = 1;
+            
             // Solid color without a texture.
             if (fillStyle < 32)
             {

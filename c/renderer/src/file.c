@@ -8,7 +8,6 @@
 
 #include <assert.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include "file.h"
 
 #define k_assert(condition, errorMessage) assert(condition && errorMessage)

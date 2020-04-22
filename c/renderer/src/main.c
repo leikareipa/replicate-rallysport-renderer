@@ -22,11 +22,11 @@ int main(void)
     time_t startTime = time(NULL);
     unsigned numFrames = 0;
 
-   // while ((time(NULL) - startTime < 3))
+    while ((time(NULL) - startTime < 3))
     {
         krender_clear_surface();
         krender_draw_mesh(kground_ground_mesh(), 0);
-        krender_draw_mesh(kmesh_prop_mesh(15), 1);
+        krender_draw_mesh(kmesh_prop_mesh(PROP_TYPE_STONE_ARCH), 1);
         krender_flip_surface();
         
         krender_move_camera();

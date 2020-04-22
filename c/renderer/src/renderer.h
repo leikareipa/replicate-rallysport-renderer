@@ -37,8 +37,10 @@ int krender_enter_text_mode(void);
 // Wipes the screen to blank.
 void krender_clear_surface(void);
 
-// Renders the given mesh.
-void krender_draw_mesh(const struct mesh_s *const mesh, int doTransform);
+// Renders the given mesh. If doTransform is true, the mesh's vertices will be
+// transformed into screen space prior to rendering; otherwise, transformation
+// will not be performed.
+void krender_draw_mesh(const struct mesh_s *const mesh, const int doTransform);
 
 // Prepare the render surface for drawing. In DOS, this means entering VGA mode
 // 13h.

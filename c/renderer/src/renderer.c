@@ -72,7 +72,7 @@ void krender_initialize(void)
 
     ktexture_initialize_textures();
     kmesh_initialize_meshes();
-    kground_initialize_ground(3);
+    kground_initialize_ground(2);
 
     krender_enter_grapics_mode();
     krender_clear_surface();
@@ -189,26 +189,34 @@ void krender_clear_surface(void)
     return;
 }
 
-void krender_draw_mesh(const struct mesh_s *const mesh, int doTransform)
+void krender_draw_mesh(const struct mesh_s *const mesh, const int doTransform)
 {
-    static struct polygon_s poly = {0};
-    if (!poly.verts)
+    // A scratch buffer to copy polygons' transformed vertices into.
+    static struct vertex_s *vertexScratch = NULL;
+    if (!vertexScratch)
     {
-        poly.verts = malloc(sizeof(struct polygon_s) * 10);
+        /// TODO: Free this allocation on program exit.
+        vertexScratch = malloc(sizeof(struct vertex_s) * 10);
     }
+
+    /// TODO: Verify that the vertex scratch buffer has enough allocated
+    /// memory to hold the mesh's largest polygon's vertices.
 
     for (unsigned i = 0; i < mesh->numPolys; i++)
     {
-        poly.color = mesh->polys[i].color;
-        poly.numVerts = mesh->polys[i].numVerts;
-        poly.texture = mesh->polys[i].texture;
+        struct polygon_s poly = mesh->polys[i];
+        poly.verts = vertexScratch;
         memcpy(poly.verts, mesh->polys[i].verts, sizeof(struct vertex_s) * mesh->polys[i].numVerts);
 
         if (doTransform)
         {
             krender_transform_poly(&poly);
         }
-        fill_poly(&poly);
+
+        if (poly.visible)
+        {
+            fill_poly(&poly);
+        }        
     }
     
     return;
