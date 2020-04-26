@@ -48,6 +48,10 @@ void krender_initialize(void);
 // mode and entering text mode.
 void krender_release(void);
 
+float krender_camera_x(void);
+
+float krender_camera_z(void);
+
 // Transforms the given polygon into screen space.
 void krender_transform_poly(struct polygon_s *const poly);
 

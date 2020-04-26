@@ -73,7 +73,7 @@ const void* kelpo_generic_stack__pop(struct kelpo_generic_stack_s *const stack);
 void* kelpo_generic_stack__front(struct kelpo_generic_stack_s *const stack);
 
 /* Returns a pointer to the idx'th element.*/
-void* kelpo_generic_stack__at(struct kelpo_generic_stack_s *const stack,
+void* kelpo_generic_stack__at(const struct kelpo_generic_stack_s *const stack,
                               const uint32_t idx);
 
 /* Removes all existing elements from the stack, but doesn't deallocate their

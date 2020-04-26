@@ -12,9 +12,9 @@ int kground_width(void);
 
 int kground_height(void);
 
-const struct mesh_s* kground_ground_mesh(void);
+const struct kelpo_generic_stack_s* kground_ground_meshes(void);
 
-void kground_update_ground_mesh(void);
+void kground_update_ground_mesh(const int viewOffsX, const int viewOffsZ);
 
 void kground_initialize_ground(const unsigned groundIdx);
 

@@ -8,6 +8,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "generic_stack.h"
 #include "file.h"
@@ -27,22 +28,22 @@ struct mesh_s load_prop_mesh(const int propType)
 
     switch (propType)
     {
-        case PROP_TYPE_TREE: vertexCoordsOffs = 0xd02cu; vertexIndicesOffs = 0xd088u; break;
-        case PROP_TYPE_WIRE_FENCE: vertexCoordsOffs = 0x47e2u; vertexIndicesOffs = 0x4c98u; break;
-        case PROP_TYPE_HORSE_FENCE: vertexCoordsOffs = 0x47e2u; vertexIndicesOffs = 0x4d98u; break;
-        case PROP_TYPE_TRAFFIC_SIGN_80: vertexCoordsOffs = 0x4766u; vertexIndicesOffs = 0x4c20u; break;
-        case PROP_TYPE_TRAFFIC_SIGN_EXCLAMATION: vertexCoordsOffs = 0x4766u; vertexIndicesOffs = 0x4c5cu; break;
-        case PROP_TYPE_STONE_ARCH: vertexCoordsOffs = 0x4ff2u; vertexIndicesOffs = 0x51e0u; break;
-        case PROP_TYPE_STONE_POST: vertexCoordsOffs = 0x4abau; vertexIndicesOffs = 0x4aecu; break;
-        case PROP_TYPE_LARGE_ROCK: vertexCoordsOffs = 0x4932u; vertexIndicesOffs = 0x49e4u; break;
-        case PROP_TYPE_SMALL_ROCK: vertexCoordsOffs = 0x498eu; vertexIndicesOffs = 0x49e4u; break;
-        case PROP_TYPE_LARGE_BILLBOARD: vertexCoordsOffs = 0x4466u; vertexIndicesOffs = 0x4560u; break;
-        case PROP_TYPE_SMALL_BILLBOARD: vertexCoordsOffs = 0x44e6u; vertexIndicesOffs = 0x4660u; break;
-        case PROP_TYPE_BUILDING: vertexCoordsOffs = 0x48eeu; vertexIndicesOffs = 0x4b7cu; break;
-        case PROP_TYPE_UTIL_POLE_1: vertexCoordsOffs = 0x4324u; vertexIndicesOffs = 0x434au; break;
-        case PROP_TYPE_UTIL_POLE_2: vertexCoordsOffs = 0x4324u; vertexIndicesOffs = 0x439cu; break;
-        case PROP_TYPE_STARTING_LINE: vertexCoordsOffs = 0x5488u; vertexIndicesOffs = 0x5502u; break;
-        case PROP_TYPE_STONE_STARTING_LINE: vertexCoordsOffs = 0x50d2u; vertexIndicesOffs = 0x51c4u; break;
+        case PROP_TYPE_TREE:                     vertexCoordsOffs = 0xd02c; vertexIndicesOffs = 0xd088; break;
+        case PROP_TYPE_WIRE_FENCE:               vertexCoordsOffs = 0x47e2; vertexIndicesOffs = 0x4c98; break;
+        case PROP_TYPE_HORSE_FENCE:              vertexCoordsOffs = 0x47e2; vertexIndicesOffs = 0x4d98; break;
+        case PROP_TYPE_TRAFFIC_SIGN_80:          vertexCoordsOffs = 0x4766; vertexIndicesOffs = 0x4c20; break;
+        case PROP_TYPE_TRAFFIC_SIGN_EXCLAMATION: vertexCoordsOffs = 0x4766; vertexIndicesOffs = 0x4c5c; break;
+        case PROP_TYPE_STONE_ARCH:               vertexCoordsOffs = 0x4ff2; vertexIndicesOffs = 0x51e0; break;
+        case PROP_TYPE_STONE_POST:               vertexCoordsOffs = 0x4aba; vertexIndicesOffs = 0x4aec; break;
+        case PROP_TYPE_LARGE_ROCK:               vertexCoordsOffs = 0x4932; vertexIndicesOffs = 0x49e4; break;
+        case PROP_TYPE_SMALL_ROCK:               vertexCoordsOffs = 0x498e; vertexIndicesOffs = 0x49e4; break;
+        case PROP_TYPE_LARGE_BILLBOARD:          vertexCoordsOffs = 0x4466; vertexIndicesOffs = 0x4560; break;
+        case PROP_TYPE_SMALL_BILLBOARD:          vertexCoordsOffs = 0x44e6; vertexIndicesOffs = 0x4660; break;
+        case PROP_TYPE_BUILDING:                 vertexCoordsOffs = 0x48ee; vertexIndicesOffs = 0x4b7c; break;
+        case PROP_TYPE_UTIL_POLE_1:              vertexCoordsOffs = 0x4324; vertexIndicesOffs = 0x434a; break;
+        case PROP_TYPE_UTIL_POLE_2:              vertexCoordsOffs = 0x4324; vertexIndicesOffs = 0x439c; break;
+        case PROP_TYPE_STARTING_LINE:            vertexCoordsOffs = 0x5488; vertexIndicesOffs = 0x5502; break;
+        case PROP_TYPE_STONE_STARTING_LINE:      vertexCoordsOffs = 0x50d2; vertexIndicesOffs = 0x51c4; break;
         default: assert(0 && "Unknown prop type."); break;
     }
 
@@ -64,9 +65,9 @@ struct mesh_s load_prop_mesh(const int propType)
             int16_t coords[3];
             kfile_read_byte_array((uint8_t*)coords, (sizeof(*coords) * 3), rallyeHandle);
             
-            vertexCoords[i].x = coords[0] + 55;
-            vertexCoords[i].y = coords[1]+270;
-            vertexCoords[i].z = ((coords[2]-1500) / 575.0);
+            vertexCoords[i].x = coords[0];
+            vertexCoords[i].y = coords[1];
+            vertexCoords[i].z = coords[2];
         }
     }
 
@@ -148,18 +149,10 @@ struct mesh_s load_prop_mesh(const int propType)
         free(vertexIndices);
     }
 
-    // Copy into the mesh the polygons we've constructed. Note that we copy
-    // them in reverse order, to account for differences in how Rally-Sport
-    // renders meshes on the Z axis and how we do it.
-    {
-        mesh.numPolys = polyStack->count;
-        mesh.polys = malloc(sizeof(struct polygon_s) * polyStack->count);
-
-        for (unsigned i = 0; i < polyStack->count; i++)
-        {
-            mesh.polys[i] = *(struct polygon_s*)kelpo_generic_stack__at(polyStack, (polyStack->count - i - 1));
-        }
-    }
+    // Copy into the mesh the polygons we've constructed.
+    mesh.numPolys = polyStack->count;
+    mesh.polys = malloc(sizeof(struct polygon_s) * polyStack->count);
+    memcpy(mesh.polys, polyStack->data, sizeof(struct polygon_s) * polyStack->count);
 
     free(vertexCoords);
     kelpo_generic_stack__free(polyStack);

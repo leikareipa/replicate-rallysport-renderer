@@ -19,13 +19,13 @@ void krender_transform_poly(struct polygon_s *const poly)
 
     for (unsigned i = 0; i < poly->numVerts; i++)
     {
-        poly->verts[i].x = round(screenWidthHalf + ((CAMERA_POS.x + poly->verts[i].x - screenWidthHalf) / (CAMERA_POS.z + poly->verts[i].z)));
-        poly->verts[i].y = round((CAMERA_POS.y + poly->verts[i].y) / (CAMERA_POS.z + poly->verts[i].z));
+        poly->verts[i].x = floor(screenWidthHalf + ((CAMERA_POS.x + poly->verts[i].x - screenWidthHalf) / (CAMERA_POS.z + poly->verts[i].z / 575.0)));
+        poly->verts[i].y = floor((CAMERA_POS.y + poly->verts[i].y) / (CAMERA_POS.z + poly->verts[i].z / 575.0));
     }
 
     // Find whether at least one of the polygon's transformed vertices is inside
     // the view frustum.
-    poly->visible = 0;
+    poly->visible = 1;
     for (unsigned i = 0; i < poly->numVerts; i++)
     {
         if (((poly->verts[i].x >= 0) && (poly->verts[i].x < GRAPHICS_MODE_WIDTH)) &&

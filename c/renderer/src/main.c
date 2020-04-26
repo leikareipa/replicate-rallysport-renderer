@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include "generic_stack.h"
 #include "mesh.h"
 #include "ground.h"
 #include "renderer.h"
@@ -22,18 +23,30 @@ int main(void)
     time_t startTime = time(NULL);
     unsigned numFrames = 0;
 
-    struct mesh_s propMesh = kmesh_prop_mesh(PROP_TYPE_STONE_ARCH, 0, 0, 0);
-    struct mesh_s propMesh2 = kmesh_prop_mesh(PROP_TYPE_STONE_ARCH, 50, -50, 2);
-
-    while ((time(NULL) - startTime < 3))
+    while ((time(NULL) - startTime) < 8)
     {
         krender_clear_surface();
-        krender_draw_mesh(kground_ground_mesh(), 0);
-        krender_draw_mesh(&propMesh, 1);
-        krender_draw_mesh(&propMesh2, 1);
-        krender_flip_surface();
+        
+        // Move the camera, for testing purposes.
+        {
+            static float px = 1;
+            static float pz = 1;
+        
+            kground_update_ground_mesh(px, pz);
+            pz += 0.25;
+        }
 
-        propMesh.x += 8;
+        // Render the ground.
+        {
+            const struct kelpo_generic_stack_s *const groundMeshes = kground_ground_meshes();
+
+            for (unsigned i = 0; i < groundMeshes->count; i++)
+            {
+                krender_draw_mesh(kelpo_generic_stack__at(groundMeshes, i), 1);
+            }
+        }
+
+        krender_flip_surface();
 
         numFrames++;
     }

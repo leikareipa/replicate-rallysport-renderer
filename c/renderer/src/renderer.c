@@ -42,6 +42,9 @@ static const unsigned GRAPHICS_MODE_HEIGHT = 200;
 static uint8_t *RENDER_BUFFER;
 #define VRAM_XY(x, y) RENDER_BUFFER[(x) + (y) * GRAPHICS_MODE_WIDTH]
 
+static uint8_t *DEPTH_BUFFER;
+#define DEPTH_BUFFER_XY(x, y) DEPTH_BUFFER[(x) + (y) * GRAPHICS_MODE_WIDTH]
+
 #define LERP(a, b, weight) ((a) + ((weight) * ((b) - (a))))
 
 static unsigned CURRENT_VIDEO_MODE = VIDEO_MODE_TEXT;
@@ -66,13 +69,24 @@ static int current_video_mode(void)
     #endif
 }
 
+float krender_camera_x(void)
+{
+    return CAMERA_POS.x;
+}
+
+float krender_camera_z(void)
+{
+    return CAMERA_POS.z;
+}
+
 void krender_initialize(void)
 {
-    RENDER_BUFFER = malloc(GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT);
+    RENDER_BUFFER = malloc(sizeof(*RENDER_BUFFER) * GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT);
+    DEPTH_BUFFER = malloc(sizeof(*DEPTH_BUFFER) * GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT);
 
     ktexture_initialize_textures();
     kmesh_initialize_meshes();
-    kground_initialize_ground(2);
+    kground_initialize_ground(3);
 
     krender_enter_grapics_mode();
     krender_clear_surface();
@@ -87,6 +101,7 @@ void krender_release(void)
     kground_release_ground();
 
     free(RENDER_BUFFER);
+    free(DEPTH_BUFFER);
 
     krender_enter_text_mode();
 
@@ -101,7 +116,7 @@ void krender_flip_surface(void)
         while (!(inp(0x03da) & 0x08)) _asm{nop};
 
         // Copy into VGA mode 13h video memory.
-        memcpy((uint8_t*)0xA0000000L, RENDER_BUFFER, (GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT));
+        memcpy((uint8_t*)0xA0000000L, RENDER_BUFFER, (sizeof(*RENDER_BUFFER) * GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT));
     #else
         static uint8_t *scratch = 0;
         if (!scratch)
@@ -168,12 +183,15 @@ void krender_clear_surface(void)
     {
         case VIDEO_MODE_GRAPHICS:
         {
-            memset(RENDER_BUFFER, 0, (GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT));
+            memset(RENDER_BUFFER, 0, (sizeof(*RENDER_BUFFER) * GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT));
+            memset(DEPTH_BUFFER, 0, (sizeof(*DEPTH_BUFFER) * GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT));
+
             break;
         }
         case VIDEO_MODE_TEXT:
         {
             /* TODO.*/
+
             break;
         }
         default: assert(0 && "Unknown video mode.");
@@ -239,8 +257,8 @@ int krender_enter_grapics_mode(void)
 
         CURRENT_VIDEO_MODE = current_video_mode();
     #else
-        sdlWindow = SDL_CreateWindow("Rally-Sport render test", 0, 0, 1280, 800, 0);
-        sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);
+        sdlWindow = SDL_CreateWindow("Rally-Sport render test", 0, 0, 1280, 800, SDL_WINDOW_OPENGL);
+        sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
         sdlTexture = SDL_CreateTexture(sdlRenderer,
                                        SDL_PIXELFORMAT_ABGR8888,
                                        SDL_TEXTUREACCESS_STREAMING,

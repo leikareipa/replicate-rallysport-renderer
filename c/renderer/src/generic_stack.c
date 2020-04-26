@@ -98,7 +98,7 @@ void* kelpo_generic_stack__front(struct kelpo_generic_stack_s *const stack)
     return ((uint8_t*)stack->data + ((stack->count - 1) * stack->elementByteSize));
 }
 
-void* kelpo_generic_stack__at(struct kelpo_generic_stack_s *const stack,
+void* kelpo_generic_stack__at(const struct kelpo_generic_stack_s *const stack,
                               const uint32_t idx)
 {
     assert((idx < stack->count) && "Attempting to access the stack out of bounds.");

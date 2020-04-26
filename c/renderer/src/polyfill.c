@@ -13,16 +13,16 @@
 #include <math.h>
 #include "texture.h"
 
-/* The maximum number of vertices per polygon we support.*/
+// The maximum number of vertices per polygon we support.
 #define MAX_VERTEX_COUNT 16
 
-/* Initialize increments for vertical interpolation.*/
+// Initialize increments for vertical interpolation.
 static void init_lerp_deltas(float *const deltaX,
                              const int dir,
                              const unsigned vertexIdx,
                              const struct vertex_s *const verts)
 {
-    /* Horizontal edges.*/
+    // Horizontal edges.
     if (verts[vertexIdx].y == verts[vertexIdx + dir].y)
     {
         *deltaX = 0;
@@ -37,7 +37,7 @@ static void init_lerp_deltas(float *const deltaX,
     return;
 }
 
-/* Initialize values to be interpolated vertically.*/
+// Initialize values to be interpolated vertically.
 static void init_lerp_values(float *const x,
                              const unsigned vertexIdx,
                              const struct vertex_s *const verts)
@@ -47,7 +47,8 @@ static void init_lerp_values(float *const x,
     return;
 }
 
-int compareY(const void *a, const void *b)
+// For use with qsort() to sort vertices by their Y coordinate.
+int qsort_sort_vertices_by_y(const void *a, const void *b)
 {
     if (((struct vertex_s*)a)->y <  ((struct vertex_s*)b)->y)
     {
@@ -63,8 +64,8 @@ int compareY(const void *a, const void *b)
     }
 }
 
-/* Sorts the polygon's vertices in counter-clockwise order, starting from the
- * top (lowest Y) and winding around the polygon back to the top.*/
+// Sorts the polygon's vertices in counter-clockwise order, starting from the
+// top (lowest Y) and winding around the polygon back to the top.
 static int sort_vertices_ccw(struct polygon_s *poly)
 {
     unsigned i;
@@ -80,9 +81,9 @@ static int sort_vertices_ccw(struct polygon_s *poly)
         return 0;
     }
 
-    /* Sort verts by Y coordinate from lowest to highest (top to bottom on the
-     * screen).*/
-    qsort(poly->verts, poly->numVerts, sizeof(poly->verts[0]), compareY);
+    // Sort verts by Y coordinate from lowest to highest (top to bottom on the
+    // screen).
+    qsort(poly->verts, poly->numVerts, sizeof(poly->verts[0]), qsort_sort_vertices_by_y);
     
     struct vertex_s *const topVert = &poly->verts[0];
     struct vertex_s *const bottomVert = &poly->verts[poly->numVerts - 1];
@@ -130,8 +131,16 @@ void fill_poly(struct polygon_s *const poly)
 
     const int polyHeight = sort_vertices_ccw(poly);
 
-    /* Complete the vertex loop by connecting an extra vertex at the end to
-     * the beginning. This simplifies rendering.*/
+    // Get an estimate of the polygon's average depth, for depth buffering.
+    uint16_t polyDepth = 0;
+    for (unsigned i = 0; i < poly->numVerts; i++)
+    {
+        polyDepth += -poly->verts[i].z;
+    }
+    polyDepth >>= 8; // The depth buffer is 8 bits per pixel.
+
+    // Complete the vertex loop by connecting an extra vertex at the end to
+    // the beginning. This simplifies rendering.
     poly->verts[poly->numVerts] = poly->verts[0];
 
     int y = poly->verts[0].y;
@@ -152,7 +161,7 @@ void fill_poly(struct polygon_s *const poly)
     init_lerp_values(&startX, leftVertIdx, poly->verts);
     init_lerp_values(&endX, rightVertIdx, poly->verts);
 
-    /* Fill.*/
+    // Fill.
     for (;;)
     {
         if (y >= GRAPHICS_MODE_HEIGHT)
@@ -174,21 +183,21 @@ void fill_poly(struct polygon_s *const poly)
             init_lerp_values(&endX, rightVertIdx, poly->verts);
         }
 
-        /* When we reach the bottom of the polygon, we're done.*/
+        // When we reach the bottom of the polygon, we're done.
         if (y >= (polyHeight + poly->verts[0].y))
         {
             break;
         }
 
-        /* Fill the current raster line.*/
+        // Fill the current raster line.
         if ((y >= 0) && (endX > startX))
         {
             const float lineWidth = (endX - startX + 1);
 
-            /* Horizontal interpolated values.*/
+            // Horizontal interpolated values.
             uint16_t textureU = 0;
 
-            /* Horizontal interpolation deltas.*/
+            // Horizontal interpolation deltas.
             uint16_t deltaTextureU;
 
             unsigned baseTexelIdx;
@@ -203,7 +212,7 @@ void fill_poly(struct polygon_s *const poly)
                 deltaTextureU = 0;
                 baseTexelIdx = 0;
             }
-            
+
             for (int x = startX; x < endX; x++)
             {
                 if (x >= (int)GRAPHICS_MODE_WIDTH) break;
@@ -214,28 +223,25 @@ void fill_poly(struct polygon_s *const poly)
                                             ? poly->texture->pixels[baseTexelIdx + (textureU >> 8)]
                                             : poly->color);
 
-                    VRAM_XY(x, y) = color;
+                    if (DEPTH_BUFFER_XY(x, y) < polyDepth)
+                    {
+                        VRAM_XY(x, y) = color;
+                        DEPTH_BUFFER_XY(x, y) = polyDepth;
+                    }
                 }
 
-                /* Increment horizontal deltas.*/
+                // Increment horizontal deltas.
                 textureU += deltaTextureU;
             }
         }
 
-        /* Increment vertical deltas.*/
+        // Increment vertical deltas.
         startX += deltaStartX;
         endX += deltaEndX;
         textureV += textureVDelta;
 
         y++;
     }
-
-    // Visually indicate the locations of the poly's vertices. For debugging
-    // reasons.
-    /*for (y = 0; y < poly->numVerts; y++)
-    {
-        VRAM_XY(poly->verts[y].x, poly->verts[y].y) = y%10+10;
-    }*/
 
     return;
 }
