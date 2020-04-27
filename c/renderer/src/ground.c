@@ -32,6 +32,8 @@ static unsigned HEIGHTMAP_HEIGHT;
 // For each tile on the track its texture index. Note that the tilemap has the
 // same dimensions as the heightmap.
 static uint8_t *TILEMAP;
+static unsigned TILEMAP_WIDTH; // In units of tiles.
+static unsigned TILEMAP_HEIGHT;
 
 // We'll make the heightmap data into quads that can be included in the ground
 // mesh.
@@ -53,6 +55,16 @@ static struct track_prop_s* PROPS[MAX_NUM_PROPS];
 // Vertices representing ground meshes will be offset by these amounts. This
 // is done to center the meshes on the screen when rendered.
 static struct vector_s GROUND_OFFSET = {-(((NUM_HEIGHTMAP_QUADS_X / 2) - 1) * GROUND_TILE_WIDTH), 0, -700};
+
+// Convenience macro for querying the heightmap's value at the given XY
+// coordinates, with bounds-checking on the coordinate values.
+#define HEIGHT_AT(x, y) (((x) < 0) || ((x) > HEIGHTMAP_WIDTH) ||\
+                         ((y) < 0) || ((y) >= HEIGHTMAP_HEIGHT))? 0 : -HEIGHTMAP[(x) + (y) * HEIGHTMAP_WIDTH]
+
+// Convenience macro for querying the tilemap's value at the given XY
+// coordinates, with bounds-checking on the coordinate values.
+#define TILE_AT(x, y)   (((x) < 0) || ((x) > HEIGHTMAP_WIDTH) ||\
+                         ((y) < 0) || ((y) >= HEIGHTMAP_HEIGHT))? 0 : TILEMAP[(x) + (y) * HEIGHTMAP_WIDTH]
 
 int kground_width(void)
 {
@@ -96,25 +108,25 @@ void kground_update_ground_mesh(const int viewOffsX, const int viewOffsZ)
 
                 // Back left.
                 groundPoly->verts[0].x = vertX;
-                groundPoly->verts[0].y = -HEIGHTMAP[tileX + tileY * HEIGHTMAP_WIDTH];
+                groundPoly->verts[0].y = HEIGHT_AT(tileX, tileY);
                 groundPoly->verts[0].z = vertZ;
 
                 // Back right.
                 groundPoly->verts[1].x = (vertX + GROUND_TILE_WIDTH);
-                groundPoly->verts[1].y = -HEIGHTMAP[(tileX + 1) + tileY * HEIGHTMAP_WIDTH];
+                groundPoly->verts[1].y = HEIGHT_AT((tileX + 1), tileY);
                 groundPoly->verts[1].z = vertZ;
 
                 // Front left.
                 groundPoly->verts[2].x = vertX;
-                groundPoly->verts[2].y = -HEIGHTMAP[tileX + (tileY - 1) * HEIGHTMAP_WIDTH];
+                groundPoly->verts[2].y = HEIGHT_AT(tileX, (tileY - 1));
                 groundPoly->verts[2].z = (vertZ + GROUND_TILE_HEIGHT);
 
                 // Front right.
                 groundPoly->verts[3].x = (vertX + GROUND_TILE_WIDTH);
-                groundPoly->verts[3].y = -HEIGHTMAP[(tileX + 1) + (tileY - 1) * HEIGHTMAP_WIDTH];
+                groundPoly->verts[3].y = HEIGHT_AT((tileX + 1), (tileY - 1));
                 groundPoly->verts[3].z = (vertZ + GROUND_TILE_HEIGHT);
 
-                groundPoly->texture = ktexture_pala_texture(TILEMAP[tileX + (tileY - 1) * HEIGHTMAP_WIDTH]);
+                groundPoly->texture = ktexture_pala_texture(TILE_AT(tileX, (tileY - 1)));
 
                 kelpo_generic_stack__push_copy(GROUND_MESH_POLYS, groundPoly);
             }
@@ -130,14 +142,13 @@ void kground_update_ground_mesh(const int viewOffsX, const int viewOffsZ)
     // Add props.
     for (unsigned i = 0; i < NUM_PROPS; i++)
     {
-        //                                                                        v-- Negate the camera's offset.
         const int meshX = (PROPS[i]->position.x - ((viewOffsX * GROUND_TILE_WIDTH) - GROUND_OFFSET.x));
         const int meshZ = (PROPS[i]->position.z + (viewOffsZ * GROUND_TILE_HEIGHT) + GROUND_OFFSET.z);
         const int meshY = (PROPS[i]->position.y
                            ? PROPS[i]->position.y
-                           : -HEIGHTMAP[((int)PROPS[i]->position.x / GROUND_TILE_WIDTH) + (-(int)PROPS[i]->position.z / GROUND_TILE_HEIGHT) * HEIGHTMAP_WIDTH]);
+                           : HEIGHT_AT(((int)PROPS[i]->position.x / GROUND_TILE_WIDTH), (-(int)PROPS[i]->position.z / GROUND_TILE_HEIGHT)));
         
-        // If the prop isn't visible on screen, don't add it.
+        // If the prop isn't within the view frustum, don't add it.
         if ((meshZ > (GROUND_OFFSET.z + GROUND_TILE_HEIGHT)) ||
             (meshZ < (GROUND_OFFSET.z - ((NUM_HEIGHTMAP_QUADS_Z + 3) * GROUND_TILE_HEIGHT))) ||
             (meshX < (GROUND_OFFSET.x - (3 * GROUND_TILE_WIDTH))) ||
@@ -210,8 +221,10 @@ void kground_initialize_ground(const unsigned groundIdx)
         const file_handle_t varimaaHandle = kfile_open_file(filename, "rb");
         assert((sqrt(kfile_file_size(varimaaHandle)) == HEIGHTMAP_WIDTH) && "Invalid tilemap dimensions.");
 
-        TILEMAP = malloc(HEIGHTMAP_WIDTH * HEIGHTMAP_HEIGHT);
-        kfile_read_byte_array(TILEMAP, (HEIGHTMAP_WIDTH * HEIGHTMAP_HEIGHT), varimaaHandle);
+        TILEMAP_WIDTH = HEIGHTMAP_WIDTH;
+        TILEMAP_HEIGHT = HEIGHTMAP_HEIGHT;
+        TILEMAP = malloc(TILEMAP_WIDTH * TILEMAP_HEIGHT);
+        kfile_read_byte_array(TILEMAP, (TILEMAP_WIDTH * TILEMAP_HEIGHT), varimaaHandle);
 
         kfile_close_file(varimaaHandle);
     }
@@ -258,7 +271,7 @@ void kground_initialize_ground(const unsigned groundIdx)
             kfile_read_byte_array((uint8_t*)&posY, 2, rallyeHandle);
 
             PROPS[i]->position.x = posX;
-            PROPS[i]->position.y = ((posY == 0xffff)? 0 : (255 - (posY + (GROUND_TILE_WIDTH / 2))));
+            PROPS[i]->position.y = ((posY == 0xffff)? 0 : (255 - (posY + (GROUND_TILE_WIDTH * 2))));
             PROPS[i]->position.z = -posZ;
 
             // Determine the prop's type from the byte offsets to its 3d model data.
