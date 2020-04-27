@@ -8,13 +8,16 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
-#include "generic_stack.h"
-#include "texture.h"
-#include "file.h"
+#include "common/genstack.h"
+#include "common/file.h"
+#include "assets/texture.h"
 
 #if __DMC__
     #define snprintf _snprintf
 #endif
+
+// The maximum number of PALA textures we'll load from any given PALAT file.
+#define MAX_NUM_PALA_TEXTURES 253
 
 static struct kelpo_generic_stack_s *PALA_TEXTURES;
 static struct kelpo_generic_stack_s *PROP_TEXTURES;
@@ -28,9 +31,9 @@ static struct texture_s load_from_pala(const unsigned textureIdx, const unsigned
 
     struct texture_s tex;
 
-    tex.hasAlpha = ((textureIdx < 165)? 0 : 1);
+    tex.hasAlpha = ((textureIdx < 175)? 0 : 1);
 
-    if (textureIdx > 250)
+    if (textureIdx > MAX_NUM_PALA_TEXTURES)
     {
         tex.pixels = NULL;
         return tex;

@@ -15,12 +15,12 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
-#include "generic_stack.h"
-#include "vector.h"
-#include "renderer.h"
-#include "ground.h"
-#include "mesh.h"
-#include "file.h"
+#include "common/genstack.h"
+#include "common/file.h"
+#include "renderer/vector.h"
+#include "renderer/renderer.h"
+#include "assets/ground.h"
+#include "assets/mesh.h"
 
 struct track_prop_s
 {
@@ -56,7 +56,7 @@ static struct polygon_s *SURFACE_MESH_POLY_CACHE;
 // All props on the given Rally-Sport track. Note that only those props that are
 // visible in the current view will be included with its meshes.
 #define MAX_NUM_PROPS 14 // How many props a track can have, at most.
-static uint16_t NUM_PROPS = 0; // How many props this track has.
+static uint16_t NUM_PROPS = 0; // How many props this track has. Must be a 2-byte variable.
 static struct track_prop_s* PROPS[MAX_NUM_PROPS];
 
 // The vertices of the ground view meshes will be offset by this amount on the
@@ -281,7 +281,7 @@ void kground_initialize_ground(const unsigned groundIdx)
 {
     assert((groundIdx <= 8) && "Ground index out of bounds.");
 
-    GROUND_VIEW_MESHES = kelpo_generic_stack__create(15, sizeof(struct mesh_s));
+    GROUND_VIEW_MESHES = kelpo_generic_stack__create((MAX_NUM_PROPS + 1), sizeof(struct mesh_s));
 
     // Pre-allocate memory for as many surface polygons as we're going to need
     // at most. Since each surface tile (a quad polygon) can optionally have a
@@ -429,6 +429,11 @@ void kground_release_ground(void)
     free(TILEMAP);
     free(SURFACE_MESH_POLY_CACHE);
     kelpo_generic_stack__free(GROUND_VIEW_MESHES);
+
+    for (unsigned i = 0; i < NUM_PROPS; i++)
+    {
+        free(PROPS[i]);
+    }
 
     return;
 }

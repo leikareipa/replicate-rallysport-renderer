@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include "texture.h"
+#include "assets/texture.h"
 
 // The maximum number of vertices per polygon we support.
 #define MAX_VERTEX_COUNT 16

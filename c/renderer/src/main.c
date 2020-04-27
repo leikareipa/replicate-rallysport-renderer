@@ -9,14 +9,17 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
-#include "generic_stack.h"
-#include "mesh.h"
-#include "ground.h"
-#include "renderer.h"
-#include "polygon.h"
+#include "common/genstack.h"
+#include "assets/mesh.h"
+#include "assets/ground.h"
+#include "renderer/renderer.h"
+#include "renderer/polygon.h"
 
 int main(void)
 {
+    ktexture_initialize_textures();
+    kmesh_initialize_meshes();
+    kground_initialize_ground(3);
     krender_initialize();
     krender_use_palette(0);
 
@@ -29,11 +32,11 @@ int main(void)
         
         // Move the camera, for testing purposes.
         {
-            static float px = 10;
-            static float pz = 10;
+            static float px = 1;
+            static float pz = 1;
         
             kground_update_ground_mesh(px, pz);
-            px += 0.25;
+            pz += 0.25;
         }
 
         // Render the ground.
@@ -51,9 +54,12 @@ int main(void)
         numFrames++;
     }
 
-    printf("%d FPS\n", (int)round(numFrames / (float)(time(NULL) - startTime)));
+    printf("~%d FPS\n", (int)round(numFrames / (float)(time(NULL) - startTime)));
     getchar();
 
+    kmesh_release_meshes();
+    ktexture_release_textures();
+    kground_release_ground();
     krender_release();
 
     return 0;

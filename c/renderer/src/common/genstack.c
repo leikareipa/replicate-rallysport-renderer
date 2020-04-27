@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generic_stack.h"
+#include "common/genstack.h"
 
 /* When growing a stack, its new size will be its current allocated size multiplied
  * by this value and floored to an integer.*/

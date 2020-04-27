@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "generic_stack.h"
-#include "file.h"
-#include "mesh.h"
+#include "common/genstack.h"
+#include "common/file.h"
+#include "assets/mesh.h"
 
 static struct mesh_s *PROP_MESHES;
 

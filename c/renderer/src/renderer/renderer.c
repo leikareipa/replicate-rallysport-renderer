@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "file.h"
-#include "mesh.h"
-#include "ground.h"
-#include "renderer.h"
-#include "polygon.h"
+#include "common/file.h"
+#include "assets/mesh.h"
+#include "assets/ground.h"
+#include "renderer/renderer.h"
+#include "renderer/polygon.h"
 
 #if MSDOS
     #if __DMC__ // Digital Mars C/C++.
@@ -84,10 +84,6 @@ void krender_initialize(void)
     RENDER_BUFFER = malloc(sizeof(*RENDER_BUFFER) * GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT);
     DEPTH_BUFFER = malloc(sizeof(*DEPTH_BUFFER) * GRAPHICS_MODE_WIDTH * GRAPHICS_MODE_HEIGHT);
 
-    ktexture_initialize_textures();
-    kmesh_initialize_meshes();
-    kground_initialize_ground(3);
-
     krender_enter_grapics_mode();
     krender_clear_surface();
 
@@ -96,10 +92,6 @@ void krender_initialize(void)
 
 void krender_release(void)
 {
-    kmesh_release_meshes();
-    ktexture_release_textures();
-    kground_release_ground();
-
     free(RENDER_BUFFER);
     free(DEPTH_BUFFER);
 

@@ -6,8 +6,8 @@
  */
 
 #include <stdlib.h>
-#include "polygon.h"
-#include "vertex.h"
+#include "renderer/polygon.h"
+#include "renderer/vertex.h"
 
 struct polygon_s kpolygon_create_polygon(const uint16_t numVerts)
 {

@@ -8,8 +8,8 @@
 #ifndef POLYGON_H
 #define POLYGON_H
 
-#include "texture.h"
-#include "vertex.h"
+#include "assets/texture.h"
+#include "renderer/vertex.h"
 
 struct polygon_s
 {

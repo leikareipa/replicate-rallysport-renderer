@@ -8,7 +8,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "polygon.h"
+#include "renderer/polygon.h"
 
 struct mesh_s
 {
@@ -39,7 +39,7 @@ enum
     PROP_TYPE_STARTING_LINE,
     PROP_TYPE_STONE_STARTING_LINE,
 
-    // Must be last.
+    // Must be the last item in the list.
     PROP_TYPE_COUNT
 };
 
