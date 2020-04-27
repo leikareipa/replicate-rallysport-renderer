@@ -13,7 +13,8 @@
 struct texture_s
 {
     uint8_t width, height;
-    uint8_t *pixels;
+    uint8_t *pixels;   // Palette index.
+    uint8_t hasAlpha;  // If true, pixels with palette index 0 will be rendered fully transparent.
 };
 
 enum

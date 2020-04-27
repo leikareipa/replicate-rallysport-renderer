@@ -23,17 +23,17 @@ int main(void)
     time_t startTime = time(NULL);
     unsigned numFrames = 0;
 
-    while ((time(NULL) - startTime) < 8)
+    while ((time(NULL) - startTime) < 6)
     {
         krender_clear_surface();
         
         // Move the camera, for testing purposes.
         {
-            static float px = 1;
-            static float pz = 1;
+            static float px = 10;
+            static float pz = 10;
         
             kground_update_ground_mesh(px, pz);
-            pz += 0.25;
+            px += 0.25;
         }
 
         // Render the ground.

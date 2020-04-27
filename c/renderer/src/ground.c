@@ -75,6 +75,27 @@ static struct vector_s GROUND_VIEW_SCREEN_OFFSET = {-(((GROUND_VIEW_WIDTH / 2) -
 #define TILE_AT(x, y)   (((x) < 0) || ((x) > HEIGHTMAP_WIDTH) ||\
                          ((y) < 0) || ((y) >= HEIGHTMAP_HEIGHT))? 0 : TILEMAP[(x) + (y) * HEIGHTMAP_WIDTH]
 
+// Figures out which spectator billboard texture should be drawn at the given
+// track tile coordinates.
+static unsigned spectator_billboard_idx(const unsigned x, const unsigned y)
+{
+    const unsigned firstSpectatorTexIdx = 236;      // Index of the first PALA representing a (standing) spectator.
+    const unsigned lastSpectatorTexIdx = 239;       // Index of the last PALA representing a (standing) spectator. Assumes consecutive arrangement.
+    const unsigned numSkins = 4;
+    const unsigned sameRows = ((HEIGHTMAP_WIDTH == 128)? 16 : 32); // The game will repeat the same pattern of variants on the x axis this many times.
+
+    const unsigned yOffs = (y / sameRows) % numSkins;
+    const unsigned texOffs = ((x + (numSkins - 1)) + (yOffs * (numSkins - 1))) % numSkins;
+
+    const unsigned textureIdx = (firstSpectatorTexIdx + texOffs);
+
+    assert(((textureIdx >= firstSpectatorTexIdx) &&
+            (textureIdx <= lastSpectatorTexIdx)) &&
+           "Was going to return a spectator texture out of bounds. Not good.");
+
+    return textureIdx;
+}
+
 int kground_width(void)
 {
     return HEIGHTMAP_WIDTH;
@@ -131,7 +152,93 @@ void kground_update_ground_mesh(const int viewOffsX, const int viewOffsZ)
                 groundPoly->verts[3].y = HEIGHT_AT((tileX + 1), (tileY - 1));
                 groundPoly->verts[3].z = (vertZ + SURFACE_MESH_TILE_HEIGHT);
 
-                groundPoly->texture = ktexture_pala_texture(TILE_AT(tileX, (tileY - 1)));
+                const unsigned palaIdx = TILE_AT(tileX, (tileY - 1));
+                groundPoly->texture = ktexture_pala_texture(palaIdx);
+
+                // Add a billboard tile, if any.
+                {
+                    unsigned billboardPalaIdx = 0;
+
+                    switch (palaIdx)
+                    {
+                        // Spectators.
+                        case 240:
+                        case 241:
+                        case 242: billboardPalaIdx = spectator_billboard_idx(tileX, (tileY - 1)); break;
+
+                        // Shrubs.
+                        case 243: billboardPalaIdx = 208; break;
+                        case 244: billboardPalaIdx = 209; break;
+                        case 245: billboardPalaIdx = 210; break;
+
+                        // Small poles.
+                        case 246:
+                        case 247: billboardPalaIdx = 211; break;
+                        case 250: billboardPalaIdx = 212; break;
+
+                        // Bridge.
+                        case 248:
+                        case 249: billboardPalaIdx = 177; break;
+
+                        // No billboard.
+                        default: break;
+                    }
+
+                    if (billboardPalaIdx)
+                    {
+                        struct polygon_s *const billboardPoly = &SURFACE_MESH_POLY_CACHE[numPolys++];
+                        const int height = HEIGHT_AT(tileX, tileY);
+
+                        // Bridge tile.
+                        if (billboardPalaIdx == 177)
+                        {
+                            // Back left.
+                            billboardPoly->verts[0].x = vertX;
+                            billboardPoly->verts[0].y = 0;
+                            billboardPoly->verts[0].z = vertZ;
+
+                            // Back right.
+                            billboardPoly->verts[1].x = (vertX + SURFACE_MESH_TILE_WIDTH);
+                            billboardPoly->verts[1].y = 0;
+                            billboardPoly->verts[1].z = vertZ;
+
+                            // Front left.
+                            billboardPoly->verts[2].x = vertX;
+                            billboardPoly->verts[2].y = 0;
+                            billboardPoly->verts[2].z = (vertZ + SURFACE_MESH_TILE_HEIGHT);
+
+                            // Front right.
+                            billboardPoly->verts[3].x = (vertX + SURFACE_MESH_TILE_WIDTH);
+                            billboardPoly->verts[3].y = 0;
+                            billboardPoly->verts[3].z = (vertZ + SURFACE_MESH_TILE_HEIGHT);
+                        }
+                        // Other billboards.
+                        else
+                        {
+                            // Top left.
+                            billboardPoly->verts[0].x = vertX;
+                            billboardPoly->verts[0].y = (height - SURFACE_MESH_TILE_HEIGHT);
+                            billboardPoly->verts[0].z = vertZ;
+
+                            // Top right.
+                            billboardPoly->verts[1].x = (vertX + SURFACE_MESH_TILE_WIDTH);
+                            billboardPoly->verts[1].y = (height - SURFACE_MESH_TILE_HEIGHT);
+                            billboardPoly->verts[1].z = vertZ;
+
+                            // Bottom left.
+                            billboardPoly->verts[2].x = vertX;
+                            billboardPoly->verts[2].y = height;
+                            billboardPoly->verts[2].z = vertZ;
+
+                            // Bottom right.
+                            billboardPoly->verts[3].x = (vertX + SURFACE_MESH_TILE_WIDTH);
+                            billboardPoly->verts[3].y = height;
+                            billboardPoly->verts[3].z = vertZ;
+                        }
+
+                        billboardPoly->texture = ktexture_pala_texture(billboardPalaIdx);
+                    }
+                }
             }
         }
 
@@ -154,7 +261,7 @@ void kground_update_ground_mesh(const int viewOffsX, const int viewOffsZ)
                            : HEIGHT_AT(((int)PROPS[i]->position.x / SURFACE_MESH_TILE_WIDTH), (-(int)PROPS[i]->position.z / SURFACE_MESH_TILE_HEIGHT)));
         
         // If the prop isn't within the view frustum, don't add it.
-        if ((meshZ > (GROUND_VIEW_SCREEN_OFFSET.z + SURFACE_MESH_TILE_HEIGHT)) ||
+        if ((meshZ > (GROUND_VIEW_SCREEN_OFFSET.z + (1 * SURFACE_MESH_TILE_HEIGHT))) ||
             (meshZ < (GROUND_VIEW_SCREEN_OFFSET.z - ((GROUND_VIEW_HEIGHT + 3) * SURFACE_MESH_TILE_HEIGHT))) ||
             (meshX < (GROUND_VIEW_SCREEN_OFFSET.x - (3 * SURFACE_MESH_TILE_WIDTH))) ||
             (meshX > (GROUND_VIEW_SCREEN_OFFSET.x + ((GROUND_VIEW_WIDTH + 3) * SURFACE_MESH_TILE_WIDTH))))
@@ -176,11 +283,19 @@ void kground_initialize_ground(const unsigned groundIdx)
 
     GROUND_VIEW_MESHES = kelpo_generic_stack__create(15, sizeof(struct mesh_s));
 
-    SURFACE_MESH_POLY_CACHE = malloc(sizeof(*SURFACE_MESH_POLY_CACHE) * GROUND_VIEW_WIDTH * GROUND_VIEW_HEIGHT);
-
-    for (unsigned i = 0; i < (GROUND_VIEW_WIDTH * GROUND_VIEW_HEIGHT); i++)
+    // Pre-allocate memory for as many surface polygons as we're going to need
+    // at most. Since each surface tile (a quad polygon) can optionally have a
+    // billboard tile (e.g. a spectator), we need to allocate twice the size
+    // of the ground view.
     {
-        SURFACE_MESH_POLY_CACHE[i] = kpolygon_create_polygon(4);
+        const unsigned maxNumSurfacePolys = (2 * GROUND_VIEW_WIDTH * GROUND_VIEW_HEIGHT);
+
+        SURFACE_MESH_POLY_CACHE = malloc(sizeof(*SURFACE_MESH_POLY_CACHE) * maxNumSurfacePolys);
+
+        for (unsigned i = 0; i < maxNumSurfacePolys; i++)
+        {
+            SURFACE_MESH_POLY_CACHE[i] = kpolygon_create_polygon(4);
+        }
     }
 
     // Import the Rally-Sport heightmap.

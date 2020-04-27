@@ -160,7 +160,7 @@ void fill_poly(struct polygon_s *const poly)
 
     init_lerp_values(&startX, leftVertIdx, poly->verts);
     init_lerp_values(&endX, rightVertIdx, poly->verts);
-
+    
     // Fill.
     for (;;)
     {
@@ -219,18 +219,34 @@ void fill_poly(struct polygon_s *const poly)
 
                 if (x >= 0)
                 {
-                    const unsigned color = (poly->texture
-                                            ? poly->texture->pixels[baseTexelIdx + (textureU >> 8)]
-                                            : poly->color);
+                    unsigned color = 0;
 
-                    if (DEPTH_BUFFER_XY(x, y) < polyDepth)
+                    if (poly->texture)
                     {
-                        VRAM_XY(x, y) = color;
-                        DEPTH_BUFFER_XY(x, y) = polyDepth;
+                        color = poly->texture->pixels[baseTexelIdx + (textureU >> 8)];
+
+                        // Alpha test.
+                        if (poly->texture->hasAlpha && !color)
+                        {
+                            goto increment_horizontal_deltas;
+                        }
                     }
+                    else
+                    {
+                        color = poly->color;
+                    }
+
+                    // Depth test.
+                    if ((DEPTH_BUFFER_XY(x, y) >= polyDepth))
+                    {
+                        goto increment_horizontal_deltas;
+                    }
+
+                    VRAM_XY(x, y) = color;
+                    DEPTH_BUFFER_XY(x, y) = polyDepth;
                 }
 
-                // Increment horizontal deltas.
+                increment_horizontal_deltas:
                 textureU += deltaTextureU;
             }
         }

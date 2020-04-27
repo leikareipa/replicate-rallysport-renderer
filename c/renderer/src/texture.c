@@ -28,6 +28,8 @@ static struct texture_s load_from_pala(const unsigned textureIdx, const unsigned
 
     struct texture_s tex;
 
+    tex.hasAlpha = ((textureIdx < 165)? 0 : 1);
+
     if (textureIdx > 250)
     {
         tex.pixels = NULL;
@@ -65,6 +67,8 @@ static struct texture_s load_from_pala(const unsigned textureIdx, const unsigned
 static struct texture_s load_from_text(const unsigned textureIdx)
 {
     struct texture_s tex;
+
+    tex.hasAlpha = 1;
 
     const file_handle_t rallyeHandle = kfile_open_file("RALLYE.EXE", "rb");
     const file_handle_t textHandle = kfile_open_file("TEXT1.DTA", "rb");
