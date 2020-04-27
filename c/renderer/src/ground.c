@@ -3,6 +3,13 @@
  * 
  * Software: Render test for replicating Rally-Sport's rendering.
  * 
+ * Represents a view (or "ground view") of a Rally-Sport track, including its
+ * surface mesh (based on the track's MAASTO and VARIMAA data), any track props
+ * (like trees and billboards), etc.
+ * 
+ * The view is realized as a set of polygonal meshes, returned by
+ * kground_ground_meshes().
+ * 
  */
 
 #include <assert.h>
@@ -21,40 +28,42 @@ struct track_prop_s
     int type;
 };
 
-#define GROUND_TILE_WIDTH 128
-#define GROUND_TILE_HEIGHT 128
+// The number of surface tiles vertically and horizontally to display in the
+// ground view.
+#define GROUND_VIEW_WIDTH 23
+#define GROUND_VIEW_HEIGHT 24
 
-// For each corner in a track's surface its height value.
+// The dimensions, in world units, of a single tile in the surface mesh.
+#define SURFACE_MESH_TILE_WIDTH 128
+#define SURFACE_MESH_TILE_HEIGHT 128
+
+// The height value of each corner point in the surface mesh.
 static int16_t *HEIGHTMAP;
-static unsigned HEIGHTMAP_WIDTH; // In units of tiles.
+static unsigned HEIGHTMAP_WIDTH; // In tile units.
 static unsigned HEIGHTMAP_HEIGHT;
 
-// For each tile on the track its texture index. Note that the tilemap has the
-// same dimensions as the heightmap.
+// The PALAT texture index of each surface mesh tile.
 static uint8_t *TILEMAP;
-static unsigned TILEMAP_WIDTH; // In units of tiles.
+static unsigned TILEMAP_WIDTH; // In tile units.
 static unsigned TILEMAP_HEIGHT;
 
-// We'll make the heightmap data into quads that can be included in the ground
-// mesh.
-static struct polygon_s *HEIGHTMAP_QUADS;
-#define NUM_HEIGHTMAP_QUADS_X 23 // In units of tiles.
-#define NUM_HEIGHTMAP_QUADS_Z 24
+// The meshes that constitute the ground view.
+static struct kelpo_generic_stack_s *GROUND_VIEW_MESHES;
 
-// A polygonal, renderable mesh representing the ground; including the heightmap
-// quads, any visible props, etc.
-static struct mesh_s GROUND_MESH;
-static struct kelpo_generic_stack_s *GROUND_MESH_POLYS;
+// Pre-allocated memory for building the surface mesh into.
+static struct polygon_s *SURFACE_MESH_POLY_CACHE;
 
-static struct kelpo_generic_stack_s *GROUND_MESHES;
-
-#define MAX_NUM_PROPS 14
-static uint16_t NUM_PROPS = 0;
+// All props on the given Rally-Sport track. Note that only those props that are
+// visible in the current view will be included with its meshes.
+#define MAX_NUM_PROPS 14 // How many props a track can have, at most.
+static uint16_t NUM_PROPS = 0; // How many props this track has.
 static struct track_prop_s* PROPS[MAX_NUM_PROPS];
 
-// Vertices representing ground meshes will be offset by these amounts. This
-// is done to center the meshes on the screen when rendered.
-static struct vector_s GROUND_OFFSET = {-(((NUM_HEIGHTMAP_QUADS_X / 2) - 1) * GROUND_TILE_WIDTH), 0, -700};
+// The vertices of the ground view meshes will be offset by this amount on the
+// XYZ axes, so as to properly center them on the screen when rendered.
+static struct vector_s GROUND_VIEW_SCREEN_OFFSET = {-(((GROUND_VIEW_WIDTH / 2) - 1) * SURFACE_MESH_TILE_WIDTH),
+                                                    0,
+                                                    -700};
 
 // Convenience macro for querying the heightmap's value at the given XY
 // coordinates, with bounds-checking on the coordinate values.
@@ -76,35 +85,31 @@ int kground_height(void)
     return HEIGHTMAP_HEIGHT;
 }
 
-const struct mesh_s* kground_ground_mesh(void)
-{
-    return &GROUND_MESH;
-}
-
 const struct kelpo_generic_stack_s* kground_ground_meshes(void)
 {
-    return GROUND_MESHES;
+    return GROUND_VIEW_MESHES;
 }
 
 void kground_update_ground_mesh(const int viewOffsX, const int viewOffsZ)
 {
-    kelpo_generic_stack__clear(GROUND_MESH_POLYS);
-    kelpo_generic_stack__clear(GROUND_MESHES);
+    kelpo_generic_stack__clear(GROUND_VIEW_MESHES);
 
-    // Add ground tiles - including any billboards.
+    // Add surface tiles.
     {
-        for (int z = 0; z < NUM_HEIGHTMAP_QUADS_Z; z++)
+        unsigned numPolys = 0;
+
+        for (int z = 0; z < GROUND_VIEW_HEIGHT; z++)
         {
-            for (int x = 0; x < NUM_HEIGHTMAP_QUADS_X; x++)
+            for (int x = 0; x < GROUND_VIEW_WIDTH; x++)
             {
                 const int tileX = (x + viewOffsX);
                 const int tileY = (z + viewOffsZ);
 
                 // Center the mesh on screen.
-                const int vertX = ((x * GROUND_TILE_WIDTH) + GROUND_OFFSET.x);
-                const int vertZ = ((-z * GROUND_TILE_HEIGHT) + GROUND_OFFSET.z);
+                const int vertX = ((x * SURFACE_MESH_TILE_WIDTH) + GROUND_VIEW_SCREEN_OFFSET.x);
+                const int vertZ = ((-z * SURFACE_MESH_TILE_HEIGHT) + GROUND_VIEW_SCREEN_OFFSET.z);
 
-                struct polygon_s *const groundPoly = &HEIGHTMAP_QUADS[x + z * NUM_HEIGHTMAP_QUADS_X];
+                struct polygon_s *const groundPoly = &SURFACE_MESH_POLY_CACHE[numPolys++];
 
                 // Back left.
                 groundPoly->verts[0].x = vertX;
@@ -112,54 +117,54 @@ void kground_update_ground_mesh(const int viewOffsX, const int viewOffsZ)
                 groundPoly->verts[0].z = vertZ;
 
                 // Back right.
-                groundPoly->verts[1].x = (vertX + GROUND_TILE_WIDTH);
+                groundPoly->verts[1].x = (vertX + SURFACE_MESH_TILE_WIDTH);
                 groundPoly->verts[1].y = HEIGHT_AT((tileX + 1), tileY);
                 groundPoly->verts[1].z = vertZ;
 
                 // Front left.
                 groundPoly->verts[2].x = vertX;
                 groundPoly->verts[2].y = HEIGHT_AT(tileX, (tileY - 1));
-                groundPoly->verts[2].z = (vertZ + GROUND_TILE_HEIGHT);
+                groundPoly->verts[2].z = (vertZ + SURFACE_MESH_TILE_HEIGHT);
 
                 // Front right.
-                groundPoly->verts[3].x = (vertX + GROUND_TILE_WIDTH);
+                groundPoly->verts[3].x = (vertX + SURFACE_MESH_TILE_WIDTH);
                 groundPoly->verts[3].y = HEIGHT_AT((tileX + 1), (tileY - 1));
-                groundPoly->verts[3].z = (vertZ + GROUND_TILE_HEIGHT);
+                groundPoly->verts[3].z = (vertZ + SURFACE_MESH_TILE_HEIGHT);
 
                 groundPoly->texture = ktexture_pala_texture(TILE_AT(tileX, (tileY - 1)));
-
-                kelpo_generic_stack__push_copy(GROUND_MESH_POLYS, groundPoly);
             }
         }
 
-        GROUND_MESH.x = GROUND_MESH.y = GROUND_MESH.z = 0;
-        GROUND_MESH.numPolys = GROUND_MESH_POLYS->count;
-        GROUND_MESH.polys = GROUND_MESH_POLYS->data;
+        struct mesh_s heightmapMesh;
 
-        kelpo_generic_stack__push_copy(GROUND_MESHES, &GROUND_MESH);
+        heightmapMesh.x = heightmapMesh.y = heightmapMesh.z = 0;
+        heightmapMesh.numPolys = numPolys;
+        heightmapMesh.polys = SURFACE_MESH_POLY_CACHE;
+
+        kelpo_generic_stack__push_copy(GROUND_VIEW_MESHES, &heightmapMesh);
     }
 
     // Add props.
     for (unsigned i = 0; i < NUM_PROPS; i++)
     {
-        const int meshX = (PROPS[i]->position.x - ((viewOffsX * GROUND_TILE_WIDTH) - GROUND_OFFSET.x));
-        const int meshZ = (PROPS[i]->position.z + (viewOffsZ * GROUND_TILE_HEIGHT) + GROUND_OFFSET.z);
+        const int meshX = (PROPS[i]->position.x - ((viewOffsX * SURFACE_MESH_TILE_WIDTH) - GROUND_VIEW_SCREEN_OFFSET.x));
+        const int meshZ = (PROPS[i]->position.z + (viewOffsZ * SURFACE_MESH_TILE_HEIGHT) + GROUND_VIEW_SCREEN_OFFSET.z);
         const int meshY = (PROPS[i]->position.y
                            ? PROPS[i]->position.y
-                           : HEIGHT_AT(((int)PROPS[i]->position.x / GROUND_TILE_WIDTH), (-(int)PROPS[i]->position.z / GROUND_TILE_HEIGHT)));
+                           : HEIGHT_AT(((int)PROPS[i]->position.x / SURFACE_MESH_TILE_WIDTH), (-(int)PROPS[i]->position.z / SURFACE_MESH_TILE_HEIGHT)));
         
         // If the prop isn't within the view frustum, don't add it.
-        if ((meshZ > (GROUND_OFFSET.z + GROUND_TILE_HEIGHT)) ||
-            (meshZ < (GROUND_OFFSET.z - ((NUM_HEIGHTMAP_QUADS_Z + 3) * GROUND_TILE_HEIGHT))) ||
-            (meshX < (GROUND_OFFSET.x - (3 * GROUND_TILE_WIDTH))) ||
-            (meshX > (GROUND_OFFSET.x + ((NUM_HEIGHTMAP_QUADS_X + 3) * GROUND_TILE_WIDTH))))
+        if ((meshZ > (GROUND_VIEW_SCREEN_OFFSET.z + SURFACE_MESH_TILE_HEIGHT)) ||
+            (meshZ < (GROUND_VIEW_SCREEN_OFFSET.z - ((GROUND_VIEW_HEIGHT + 3) * SURFACE_MESH_TILE_HEIGHT))) ||
+            (meshX < (GROUND_VIEW_SCREEN_OFFSET.x - (3 * SURFACE_MESH_TILE_WIDTH))) ||
+            (meshX > (GROUND_VIEW_SCREEN_OFFSET.x + ((GROUND_VIEW_WIDTH + 3) * SURFACE_MESH_TILE_WIDTH))))
         {
             continue;
         }
 
         struct mesh_s propMesh = kmesh_prop_mesh(PROPS[i]->type, meshX, meshY, meshZ);
 
-        kelpo_generic_stack__push_copy(GROUND_MESHES, &propMesh);
+        kelpo_generic_stack__push_copy(GROUND_VIEW_MESHES, &propMesh);
     }
 
     return;
@@ -169,15 +174,13 @@ void kground_initialize_ground(const unsigned groundIdx)
 {
     assert((groundIdx <= 8) && "Ground index out of bounds.");
 
-    GROUND_MESH.x = GROUND_MESH.y = GROUND_MESH.z = 0;
+    GROUND_VIEW_MESHES = kelpo_generic_stack__create(15, sizeof(struct mesh_s));
 
-    GROUND_MESH_POLYS = kelpo_generic_stack__create(100, sizeof(struct polygon_s));
-    GROUND_MESHES = kelpo_generic_stack__create(15, sizeof(struct mesh_s));
+    SURFACE_MESH_POLY_CACHE = malloc(sizeof(*SURFACE_MESH_POLY_CACHE) * GROUND_VIEW_WIDTH * GROUND_VIEW_HEIGHT);
 
-    HEIGHTMAP_QUADS = malloc(sizeof(*HEIGHTMAP_QUADS) * NUM_HEIGHTMAP_QUADS_X * NUM_HEIGHTMAP_QUADS_Z);
-    for (unsigned i = 0; i < (NUM_HEIGHTMAP_QUADS_X * NUM_HEIGHTMAP_QUADS_Z); i++)
+    for (unsigned i = 0; i < (GROUND_VIEW_WIDTH * GROUND_VIEW_HEIGHT); i++)
     {
-        HEIGHTMAP_QUADS[i] = kpolygon_create_polygon(4);
+        SURFACE_MESH_POLY_CACHE[i] = kpolygon_create_polygon(4);
     }
 
     // Import the Rally-Sport heightmap.
@@ -271,7 +274,7 @@ void kground_initialize_ground(const unsigned groundIdx)
             kfile_read_byte_array((uint8_t*)&posY, 2, rallyeHandle);
 
             PROPS[i]->position.x = posX;
-            PROPS[i]->position.y = ((posY == 0xffff)? 0 : (255 - (posY + (GROUND_TILE_WIDTH * 2))));
+            PROPS[i]->position.y = ((posY == 0xffff)? 0 : (255 - (posY + (SURFACE_MESH_TILE_WIDTH * 2))));
             PROPS[i]->position.z = -posZ;
 
             // Determine the prop's type from the byte offsets to its 3d model data.
@@ -309,9 +312,8 @@ void kground_release_ground(void)
 {
     free(HEIGHTMAP);
     free(TILEMAP);
-    free(HEIGHTMAP_QUADS);
-    kelpo_generic_stack__free(GROUND_MESH_POLYS);
-    kelpo_generic_stack__free(GROUND_MESHES);
+    free(SURFACE_MESH_POLY_CACHE);
+    kelpo_generic_stack__free(GROUND_VIEW_MESHES);
 
     return;
 }
